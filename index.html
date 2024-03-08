@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Multiplayer Board Game</title>
     <link rel="stylesheet" href="style.css">
+    <script src="items.js"></script>
     <script defer src="script.js"></script>
 </head>
 <body>
@@ -11,6 +12,28 @@
     <div id="gameBoard">
         <!-- This will be populated with the game board by script.js -->
     </div>
+
+    <!-- Add a class "dropdowns-container" to the div -->
+    <div class="dropdowns-container">
+        <label for="suspectsDropdown">Choose a Suspect:</label>
+        <select id="suspectsDropdown">
+            <option value="">Select a Suspect</option>
+            <!-- Options will be filled by script.js -->
+        </select>
+
+        <label for="weaponsDropdown">Choose a Weapon:</label>
+        <select id="weaponsDropdown">
+            <option value="">Select a Weapon</option>
+            <!-- Options will be filled by script.js -->
+        </select>
+    </div>
+
+    <!-- Action Buttons -->
+    <button id="accuseButton" disabled>Make an Accusation</button>
+    <button id="suggestButton" disabled>Make a Suggestion</button>
+
+
+
     <button id="moveButton" disabled>Make a Move</button>
 
     <div id="chatContainer">

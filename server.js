@@ -88,7 +88,6 @@ wss.on('connection', function connection(ws) {
 
             const nextMove = getNextMove(data.playerId);
 
-
             clearPlayerPreviousMove(currentTurn); // Clear the current player's last position
             gameState.lastPositions[currentTurn] = { x: nextMove.x, y: nextMove.y }; // Update last position
 
@@ -97,6 +96,9 @@ wss.on('connection', function connection(ws) {
             gameState.players[currentTurn] = { x: nextMove.x, y: nextMove.y }; // Update current position
             gameState.board[nextMove.y][nextMove.x] = currentTurn; // Set new position on the board
 
+            const moveInfo = `Player ${ws.playerId} moved to (${nextMove.x}, ${nextMove.y}).`;
+            broadcastChat(moveInfo, ws.playerId); // Use this to broadcast move
+
             currentTurn = (currentTurn % players.length) + 1; // Move to the next player
             gameState.currentTurn = currentTurn;
             broadcastGameState(); // Broadcast updated game state
@@ -104,7 +106,17 @@ wss.on('connection', function connection(ws) {
 
         if (data.type === 'chat') {
             broadcastChat(data.message, ws.playerId);
+            console.log('player',playerId,'said:', data.message);
         }
+
+        if (data.type === 'suggestion') {
+            const suggestionInfo = `Player ${ws.playerId} suggests: ${data.suspect} with the ${data.weapon} at position (x: ${gameState.lastPositions[ws.playerId].x} y: ${gameState.lastPositions[ws.playerId].y}).`;
+            broadcastChat(suggestionInfo, ws.playerId); // Broadcast suggestion
+
+            console.log('player',playerId,'suspect:', data.suspect,'weapon:',data.weapon );
+        }
+        
+
     });
 
     ws.on('close', function() {
