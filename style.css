@@ -1,3 +1,11 @@
+.main-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+
 #gameBoard {
     display: grid;
     grid-template-columns: repeat(10, 30px); /* Adjust based on your grid size */
@@ -29,14 +37,39 @@
 
 /* Add more classes for additional players as needed */
 
-#moveButton {
+/* #moveButton {
     margin-top: 20px;
     padding: 10px 20px;
     font-size: 16px;
     cursor: pointer;
-}
+} */
 
 /* Add space above the dropdown container */
 .dropdowns-container {
     margin-top: 20px; /* Adjust the space as needed */
 }
+
+
+.controller {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    user-select: none;
+}
+
+.controller-row {
+    display: flex;
+    justify-content: center;
+}
+
+#chatContainer {
+    position: fixed; /* Keep the chat container in the same place */
+    top: 100px; /*   Distance from the bottom of the viewport */
+    right: 50px; /*   Distance from the right of the viewport */
+    width: 300px; /* Set a fixed width */
+    max-height: 300px; /* Set a max height */
+    overflow-y: auto; /* Add scroll bar if content is too long */
+    align-items: center;
+    border: Edge 12;
+}
+

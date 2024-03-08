@@ -20,10 +20,10 @@ function createInitialBoard(width, height) {
 // }
 
 
-function getNextMove(playerId) {
+function getNextMove(playerId,i,j) {
     const lastPos = gameState.players[playerId];
     // Example move: one step to the right; ensure you add boundary checks
-    return { x: (lastPos.x + 1) % 10, y: lastPos.y };
+    return { x: (lastPos.x + i+10) % 10, y:(lastPos.y + j+10) % 10};
 }
 
 
@@ -85,8 +85,12 @@ wss.on('connection', function connection(ws) {
             // Validate and process the move here
             // This example uses a random move for simplicity; replace with actual move logic
             // const nextMove = getRandomMove();
+            if (data.direction === "down")    {i=0,j=1 } 
+            if (data.direction === "up")  {i=0,j=-1}
+            if (data.direction === "left")  {i=-1,j=0} 
+            if (data.direction === "right") {i=1,j=0}
 
-            const nextMove = getNextMove(data.playerId);
+            const nextMove = getNextMove(data.playerId,i,j);
 
             clearPlayerPreviousMove(currentTurn); // Clear the current player's last position
             gameState.lastPositions[currentTurn] = { x: nextMove.x, y: nextMove.y }; // Update last position

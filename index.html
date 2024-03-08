@@ -8,6 +8,7 @@
     <script defer src="script.js"></script>
 </head>
 <body>
+<div class="main-container">
     <h2 id="turnIndicator">Waiting for Game to Start...</h2>
     <div id="gameBoard">
         <!-- This will be populated with the game board by script.js -->
@@ -34,13 +35,23 @@
 
 
 
-    <button id="moveButton" disabled>Make a Move</button>
+    <!--button id="moveButton" disabled>Make a Move</button-->
+    <div class="controller">
+        <button id="moveUp" class="arrow">&#8593;</button>
+        <div class="horizontal">
+            <button id="moveLeft" class="arrow">&#8592;</button>
+            <button id="moveRight" class="arrow">&#8594;</button>
+        </div>
+        <button id="moveDown" class="arrow">&#8595;</button>
+    </div>
+    
+
 
     <div id="chatContainer">
         <div id="chatBox"></div>
         <input type="text" id="chatMessage" placeholder="Type a message...">
         <button id="sendButton">Send</button>
     </div>
-
+</div>
 </body>
 </html>

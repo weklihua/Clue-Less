@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const suspectsDropdown = document.getElementById('suspectsDropdown');
     suspectsArray.forEach(suspect => {
         const option = document.createElement('option');
-        option.value = suspect.name.toLowerCase();
+        option.value = suspect.name;
         option.textContent = suspect.name;
         suspectsDropdown.appendChild(option);
     });
@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const weaponsDropdown = document.getElementById('weaponsDropdown');
     weaponsArray.forEach(weapon => {
         const option = document.createElement('option');
-        option.value = weapon.name.toLowerCase();
+        option.value = weapon.name;
         option.textContent = weapon.name;
         weaponsDropdown.appendChild(option);
     });
@@ -38,11 +38,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 updateBoard(data.board);
                 if (data.currentTurn === myPlayerId) {
                     document.getElementById('turnIndicator').textContent = 'Your turn';
-                    document.getElementById('moveButton').disabled = false;
+                    //document.getElementById('moveButton').disabled = false;
+                    document.getElementById('moveUp').disabled = false;
+                    document.getElementById('moveDown').disabled = false;
+                    document.getElementById('moveLeft').disabled = false;
+                    document.getElementById('moveRight').disabled = false;
+
+                    
                     document.getElementById('suggestButton').disabled = false; // Enable suggest button
                 } else {
                     document.getElementById('turnIndicator').textContent = `Player ${data.currentTurn}'s turn`;
-                    document.getElementById('moveButton').disabled = true;
+                    //document.getElementById('moveButton').disabled = true;
+                    document.getElementById('moveUp').disabled = true;
+                    document.getElementById('moveDown').disabled = true;
+                    document.getElementById('moveLeft').disabled = true;
+                    document.getElementById('moveRight').disabled = true;
                     document.getElementById('suggestButton').disabled = true; // Disable suggest button
                 }
                 break;
@@ -54,9 +64,30 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    document.getElementById('moveButton').addEventListener('click', () => {
-        if (!document.getElementById('moveButton').disabled) {
-            ws.send(JSON.stringify({ type: 'move', playerId: myPlayerId}));
+    // document.getElementById('moveButton').addEventListener('click', () => {
+    //     if (!document.getElementById('moveButton').disabled) {
+    //         ws.send(JSON.stringify({ type: 'move', playerId: myPlayerId}));
+    //     }
+    // });
+
+    document.getElementById('moveUp').addEventListener('click', () => {
+        if (!document.getElementById('moveUp').disabled) {
+            ws.send(JSON.stringify({ type: 'move', direction: 'up', playerId: myPlayerId }));
+        }
+    });
+    document.getElementById('moveDown').addEventListener('click', () => {
+        if (!document.getElementById('moveDown').disabled) {
+            ws.send(JSON.stringify({ type: 'move', direction: 'down', playerId: myPlayerId }));
+        }
+    });
+    document.getElementById('moveLeft').addEventListener('click', () => {
+        if (!document.getElementById('moveLeft').disabled) {
+            ws.send(JSON.stringify({ type: 'move', direction: 'left', playerId: myPlayerId }));
+        }
+    });
+    document.getElementById('moveRight').addEventListener('click', () => {
+        if (!document.getElementById('moveRight').disabled) {
+            ws.send(JSON.stringify({ type: 'move', direction: 'right', playerId: myPlayerId }));
         }
     });
 
@@ -97,7 +128,7 @@ function displayChatMessage(message, sender) {
 
 
 document.getElementById('suggestButton').addEventListener('click', () => {
-    if (!document.getElementById('moveButton').disabled) {
+    //if (!document.getElementById('moveButton').disabled) {
         const suspect = document.getElementById('suspectsDropdown').value;
         const weapon = document.getElementById('weaponsDropdown').value;
 
@@ -108,7 +139,7 @@ document.getElementById('suggestButton').addEventListener('click', () => {
             //moveInfo: moveInfo, 
             playerId: myPlayerId 
         }));
-    }
+   // }
 });
 
 
