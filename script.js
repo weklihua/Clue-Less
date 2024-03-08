@@ -6,6 +6,27 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('Connected to the server');
     };
 
+
+
+    const suspectsDropdown = document.getElementById('suspectsDropdown');
+    suspectsArray.forEach(suspect => {
+        const option = document.createElement('option');
+        option.value = suspect.name.toLowerCase();
+        option.textContent = suspect.name;
+        suspectsDropdown.appendChild(option);
+    });
+
+    const weaponsDropdown = document.getElementById('weaponsDropdown');
+    weaponsArray.forEach(weapon => {
+        const option = document.createElement('option');
+        option.value = weapon.name.toLowerCase();
+        option.textContent = weapon.name;
+        weaponsDropdown.appendChild(option);
+    });
+
+
+
+
     ws.onmessage = (event) => {
         const data = JSON.parse(event.data);
         switch (data.type) {
@@ -18,14 +39,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (data.currentTurn === myPlayerId) {
                     document.getElementById('turnIndicator').textContent = 'Your turn';
                     document.getElementById('moveButton').disabled = false;
+                    document.getElementById('suggestButton').disabled = false; // Enable suggest button
                 } else {
                     document.getElementById('turnIndicator').textContent = `Player ${data.currentTurn}'s turn`;
                     document.getElementById('moveButton').disabled = true;
+                    document.getElementById('suggestButton').disabled = true; // Disable suggest button
                 }
                 break;
+
             case 'chat':
             displayChatMessage(data.message,data.sender);
-                
+                break;
+
         }
     };
 
@@ -69,4 +94,33 @@ function displayChatMessage(message, sender) {
     chatBox.scrollTop = chatBox.scrollHeight; // Scroll to the bottom
 }
 
+
+
+document.getElementById('suggestButton').addEventListener('click', () => {
+    if (!document.getElementById('moveButton').disabled) {
+        const suspect = document.getElementById('suspectsDropdown').value;
+        const weapon = document.getElementById('weaponsDropdown').value;
+
+        ws.send(JSON.stringify({ 
+            type: 'suggestion', 
+            suspect, 
+            weapon, 
+            //moveInfo: moveInfo, 
+            playerId: myPlayerId 
+        }));
+    }
 });
+
+
+
+
+
+
+
+
+
+});
+
+
+
+
