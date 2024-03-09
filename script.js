@@ -24,7 +24,20 @@ document.addEventListener('DOMContentLoaded', () => {
         weaponsDropdown.appendChild(option);
     });
 
-
+    function displayCards(cards, containerId) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = ''; // Clear previous cards
+        cards.forEach(card => {
+            const cardElement = document.createElement('button'); // Changed from 'div' to 'button'
+            cardElement.textContent = card; // Assuming each card has a 'name' property
+            cardElement.className = 'card'; // Add a class for styling
+            cardElement.addEventListener('click', function() {
+                alert('Clicked on ' + card); // Replace this with actual click handling logic
+            });
+            container.appendChild(cardElement);
+        });
+    }
+    
 
 
     ws.onmessage = (event) => {
@@ -59,6 +72,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.getElementById('suggestButton').disabled = true; // Disable suggest button
                 }
                 break;
+
+            case 'yourCards': // Assuming 'yourCards' is the type when cards are sent
+                displayCards(data.cards.suspects, 'suspectCards');
+                displayCards(data.cards.weapons, 'weaponCards');
+                displayCards(data.cards.rooms, 'roomCards');
+                break;
+
+
 
             case 'chat':
             displayChatMessage(data.message,data.sender);
@@ -104,7 +125,12 @@ function updateBoard(board) {
             cellElement.className = 'cell';
             // Assign a class based on the player number or cell type
             if (cell > 0) {
+
                 cellElement.classList.add(`player${cell}`);
+                cellElement.classList.add(`piece`);
+
+
+
             }
             // Here, assign names to specific cells
             if ((x === 1 && y === 3) || (x === 1 && y === 1) || (x === 3 && y === 3) || (x === 3 && y === 1)) {

@@ -1,6 +1,7 @@
 const WebSocket = require('ws');
 const wss = new WebSocket.Server({ port: 8080 });
 
+
 // Define initial player positions
 const initialPlayerPositions = [
     { id: 1, x: 0, y: 1 },  /* "Prof. Plum" */ 
@@ -10,6 +11,42 @@ const initialPlayerPositions = [
     { id: 5, x: 1, y: 4 },  /* "Mr. Green"*/
     { id: 6, x: 0, y: 3 }   /* "Mrs Peacock"*/
 ];
+
+
+
+// Assuming these are your cards, modify as necessary
+const allCards = {
+    suspects: ['Miss Scarlet', 'Colonel Mustard', 'Mrs. White', 'Mr. Green', 'Mrs. Peacock', 'Professor Plum'],
+    weapons: ['Candlestick', 'Dagger', 'Lead Pipe', 'Revolver', 'Rope', 'Wrench'],
+    rooms: ['hall', 'study', 'ballroom', 'billiardRoom', 'diningRoom', 'kitchen', 'lounge', 'conservatory', 'library']
+
+};
+
+// Function to shuffle and distribute cards
+function distributeCards() {
+    let playerCards = {};
+    let shuffledSuspects = allCards.suspects.sort(() => 0.5 - Math.random());
+    let shuffledWeapons = allCards.weapons.sort(() => 0.5 - Math.random());
+    let shuffledRooms = allCards.rooms.sort(() => 0.5 - Math.random());
+
+    players.forEach((player, index) => {
+        // This assumes 'player' has a unique identifier 'playerId'
+        playerCards[player.playerId] = {
+            suspects: [shuffledSuspects[index % shuffledSuspects.length]],
+            weapons: [shuffledWeapons[index % shuffledWeapons.length]],
+            rooms: [shuffledRooms[index % shuffledRooms.length]]
+        };
+    });
+
+    return playerCards;
+}
+
+
+
+
+
+
+
 
 
 
@@ -132,6 +169,8 @@ let gameState = {
     
 };
 
+// Later, when initializing a game or round:
+
 
 
 
@@ -141,8 +180,14 @@ wss.on('connection', function connection(ws) {
     console.log(`A new player has connected with ID: ${playerId}.`);
     ws.playerId = playerId;
     players.push(ws);
-
-
+    let playerCards = distributeCards();
+    console.log('Distributed player cards:', playerCards);
+    console.log(`Sending cards to player ${ws.playerId}:`, playerCards[ws.playerId]);
+    // After assigning player ID and other setup:
+    ws.send(JSON.stringify({
+        type: 'yourCards',
+        cards: playerCards[ws.playerId] // Send player-specific cards
+    }));
     
     initialPlayerPositions.forEach(position => {
         // Assign player position
@@ -154,6 +199,8 @@ wss.on('connection', function connection(ws) {
     
 
     });
+
+
 
 //     // Send initial state to the player
     // ws.send(JSON.stringify({ type: 'init', playerId: playerId, board: gameState.board }));
