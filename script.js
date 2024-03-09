@@ -31,8 +31,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = JSON.parse(event.data);
         switch (data.type) {
             case 'init':
+
                 myPlayerId = data.playerId;
                 document.getElementById('turnIndicator').textContent = 'Waiting for other players...';
+                // initiateBoard(data.board, data.players);
+                updateBoard(data.board);
                 break;
             case 'update':
                 updateBoard(data.board);
@@ -64,11 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // document.getElementById('moveButton').addEventListener('click', () => {
-    //     if (!document.getElementById('moveButton').disabled) {
-    //         ws.send(JSON.stringify({ type: 'move', playerId: myPlayerId}));
-    //     }
-    // });
+
 
     document.getElementById('moveUp').addEventListener('click', () => {
         if (!document.getElementById('moveUp').disabled) {
@@ -91,20 +90,84 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+
+
+
+
 function updateBoard(board) {
     const gameBoard = document.getElementById('gameBoard');
     gameBoard.innerHTML = ''; // Clear the board before updating
+
     board.forEach((row, y) => {
         row.forEach((cell, x) => {
             const cellElement = document.createElement('div');
             cellElement.className = 'cell';
-            if (cell > 0) { // If the cell is not empty, assign a class based on the player number
+            // Assign a class based on the player number or cell type
+            if (cell > 0) {
                 cellElement.classList.add(`player${cell}`);
+            }
+            // Here, assign names to specific cells
+            if ((x === 1 && y === 3) || (x === 1 && y === 1) || (x === 3 && y === 3) || (x === 3 && y === 1)) {
+                cellElement.classList.add('blocked'); // You already have this for blocked cells
+            } else {
+                // Assign room names based on coordinates
+                const roomName = getRoomName_Client(x, y); // You should define this function based on your room layout
+                cellElement.setAttribute('data-room', roomName);
+                cellElement.textContent = roomName; // Display the room name on the cell
+                if (roomName === 'Hallway' && (x ===0 || x===2 || x===4 ) ){
+                    cellElement.classList.add('hallway_Horizontal');
+                }
+                if (roomName === 'Hallway' && (x ===1 || x===3 )){
+                    cellElement.classList.add('hallway_Vertical');
+                }            
+
+
+
             }
             gameBoard.appendChild(cellElement);
         });
     });
+
+
 }
+
+function getRoomName_Client(x, y) {
+    // Define your room layout here, for example:
+    if (x === 0 && y === 0) return 'Study';
+    if (x === 0 && y === 1) return 'Hallway';
+    if (x === 0 && y === 2) return 'library';
+    if (x === 0 && y === 3) return 'Hallway';
+    if (x === 0 && y === 4) return 'Conservatory'; 
+
+    if (x === 1 && y === 0) return 'Hallway';
+    // if (x === 1 && y === 1) return 'Blocked';
+    if (x === 1 && y === 2) return 'Hallway';
+    // if (x === 1 && y === 3) return 'Blocked'; 
+    if (x === 1 && y === 4) return 'Hallway';  
+    
+    if (x === 2 && y === 0) return 'Hall';
+    if (x === 2 && y === 1) return 'Hallway';
+    if (x === 2 && y === 2) return 'Billiard Room';
+    if (x === 2 && y === 3) return 'Hallway';
+    if (x === 2 && y === 4) return 'Ball Room'; 
+
+    if (x === 3 && y === 0) return 'Hallway';
+    // if (x === 3 && y === 1) return 'Blocked';
+    if (x === 3 && y === 2) return 'Hallway';
+    // if (x === 3 && y === 3) return 'Blocked'; 
+    if (x === 3 && y === 4) return 'Hallway';  
+
+    if (x === 4 && y === 0) return 'Lounge';
+    if (x === 4 && y === 1) return 'Hallway';
+    if (x === 4 && y === 2) return 'Dining Room';
+    if (x === 4 && y === 3) return 'Hallway';
+    if (x === 4 && y === 4) return 'Kitchen'; 
+
+    // Add more conditions for other rooms
+    return ''; // Return empty string if it's not a special room
+}
+
+
 
 
 // Send chat message function
@@ -141,12 +204,6 @@ document.getElementById('suggestButton').addEventListener('click', () => {
         }));
    // }
 });
-
-
-
-
-
-
 
 
 
