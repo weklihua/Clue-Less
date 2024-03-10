@@ -47,11 +47,32 @@
     
 
 
+
     <div id="chatContainer">
-        <div id="chatBox"></div>
-        <input type="text" id="chatMessage" placeholder="Type a message...">
-        <button id="sendButton">Send</button>
+        <div id="inputContainer"> <!-- New container for input and send button -->
+            <input type="text" id="chatMessage" placeholder="Type a message...">
+            <button id="sendButton">Send</button>
+        </div>
+        <div id="chatBox"></div> <!-- This will be the only part scrolling -->
     </div>
+    
+
+    <div id="playerCards">
+        <button id="suspectCards" class="cardContainer"></button>
+        <button id="weaponCards" class="cardContainer"></button>
+        <button id="roomCards" class="cardContainer"></button>
+    </div>
+    
+
 </div>
+
+
+
+
+
+
+
+
+
 </body>
 </html>

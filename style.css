@@ -1,3 +1,18 @@
+
+
+
+
+body {
+    background-image: url('image/webbackground.PNG');
+    background-size: cover; /* This ensures the image covers the entire background */
+    background-repeat: no-repeat; /* Prevents the image from repeating */
+    /* You can also adjust other properties like background-position if needed */
+}
+
+
+
+
+
 .main-container {
     display: flex;
     flex-direction: column;
@@ -61,66 +76,52 @@
 }
 
 
-
-
-
-
-
 .piece {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%; /* Makes the piece a circle */
+
+    /* border-radius: 100%; 
+    /* Makes the piece a circle */
     background-color: transparent; /* Initially no player */
+    align-items: center;
+    background-size: contain;
+    /* Adjust the image size to cover the entire element */
+    background-repeat: no-repeat;
+    align-items: center;
+    background-position: center;
+    overflow: hidden; /* Hide any overflow content outside the circular shape */
 }
 
 .player1 { background-color: red; 
 
     background-image: url('image/Pro.PNG');
-    background-size: cover; /* Adjust the image size to cover the entire element */
-    background-repeat: no-repeat;
-    align-items: center;
 
 }
 
 .player2 { background-color: orange; 
 
     background-image: url('image/sar.PNG');
-    background-size: cover; /* Adjust the image size to cover the entire element */
-    background-repeat: no-repeat;
-    align-items: center;
 
 }
 
 .player3 { background-color: yellow; 
+
     background-image: url('image/mus.PNG');
-    background-size: cover; /* Adjust the image size to cover the entire element */
-    background-repeat: no-repeat;
-    align-items: center;
+
 } 
 
 .player4 { background-color: green;
 
     background-image: url('image/whi.PNG');
-    background-size: cover; /* Adjust the image size to cover the entire element */
-    background-repeat: no-repeat;
-    align-items: center;
 
 } 
 
 .player5 { background-color: pink;    
-    
+
     background-image: url('image/gre.PNG');
-    background-size: cover; /* Adjust the image size to cover the entire element */
-    background-repeat: no-repeat;
-    align-items: center;
 } 
 
 .player6 { background-color: purple;     
 
     background-image: url('image/pea.PNG');
-    background-size: cover; /* Adjust the image size to cover the entire element */
-    background-repeat: no-repeat;
-    align-items: center;
 
 }
 /* Add more as needed for additional players
@@ -147,12 +148,59 @@
 
 #chatContainer {
     position: fixed; /* Keep the chat container in the same place */
-    top: 100px; /*   Distance from the bottom of the viewport */
-    right: 50px; /*   Distance from the right of the viewport */
-    width: 500px; /* Set a fixed width */
+    top: 100px; /* Distance from the top of the viewport */
+    right: 100px; /* Distance from the right of the viewport */
+    width: 300px; /* Set a fixed width */
+    height: auto; /* Adjust height automatically based on content */
     max-height: 500px; /* Set a max height */
-    overflow-y: auto; /* Add scroll bar if content is too long */
-    align-items: center;
-    border: Edge 12;
+    display: flex; /* Use Flexbox for the layout */
+    flex-direction: column; /* Stack items from top to bottom */
+    border: 1px solid #000; /* Define a border */
+    background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent background */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Optional: Adds shadow for depth */
+    padding: 20px; /* Add space inside the container */
 }
 
+#inputContainer {
+    margin-bottom: 10px; /* Space between input container and chat box */
+}
+
+#chatBox {
+    overflow-y: auto; /* Add scroll bar if content is too long */
+    flex-grow: 1; /* Allow the chat box to grow and fill available space */
+    max-height: 400px; /* You can adjust this based on your needs */
+}
+
+
+
+
+#playerCards {
+    position: fixed; /* Keep the card container fixed */
+    top: 100px; /* Distance from the top of the viewport */
+    left: 50px; /* Distance from the left of the viewport */
+    width: 200px; /* Set a fixed width */
+    background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent background */
+    border: 1px solid #000; /* Define a border */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Optional: Adds shadow for depth */
+    padding: 20px; /* Add space inside the container */
+}
+
+.cardContainer {
+    margin-bottom: 20px; /* Space between card categories */
+    display: flex; /* Use Flexbox for the layout */
+}
+.card {
+    background-color: white; /* Card background */
+    color: black; /* Text color */
+    padding: 10px 20px; /* Padding inside the button */
+    margin: 2px; /* Space between cards */
+    border: 1px solid #ddd; /* Border color */
+    border-radius: 5px; /* Rounded corners */
+    cursor: pointer; /* Change mouse icon to pointer */
+    transition: all 0.3s ease; /* Smooth transition for hover effects */
+}
+
+.card:hover {
+    background-color: goldenrod; /* Light grey background on hover */
+    border-color: #ccc; /* Darker border color on hover */
+}
