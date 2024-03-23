@@ -188,6 +188,7 @@ body {
 .cardContainer {
     margin-bottom: 20px; /* Space between card categories */
     display: flex; /* Use Flexbox for the layout */
+    flex-direction: column;
 }
 .card {
     background-color: white; /* Card background */
@@ -204,3 +205,19 @@ body {
     background-color: goldenrod; /* Light grey background on hover */
     border-color: #ccc; /* Darker border color on hover */
 }
+
+
+#playerCountSelection {
+    position: fixed; /* Fixed position to stay in place even when scrolling */
+    top: 70%; /* Position the top edge of the element in the middle of the screen */
+    left: 50%; /* Position the left edge of the element in the middle of the screen */
+    transform: translate(-50%, -50%); /* Shift the element up and to the left by half its height and width to center it */
+    background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent white background */
+    border: 1px solid #ddd; /* Light grey border */
+    padding: 20px; /* Spacing inside the box */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Slight shadow for depth */
+    display: none; /* Initially hidden, will be shown for player 1 */
+    z-index: 100; /* Ensure it's on top of other elements */
+}
+
+

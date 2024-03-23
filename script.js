@@ -7,7 +7,6 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
 
-
     const suspectsDropdown = document.getElementById('suspectsDropdown');
     suspectsArray.forEach(suspect => {
         const option = document.createElement('option');
@@ -43,18 +42,58 @@ document.addEventListener('DOMContentLoaded', () => {
     ws.onmessage = (event) => {
         const data = JSON.parse(event.data);
         switch (data.type) {
+
+
+            case 'playerInfo':
+                // Check if this client is Player 1
+                if (data.isPlayerOne) {
+                    // Show the player count selection for Player 1
+                    // alert(data.isPlayerOne);
+                    document.getElementById('playerCountSelection').style.display = 'block';
+                } else {
+                    // Hide the player count selection for other players
+                    document.getElementById('playerCountSelection').style.display = 'none';
+                }
+                break;
+
             case 'init':
 
                 myPlayerId = data.playerId;
                 document.getElementById('turnIndicator').textContent = 'Waiting for other players...';
                 // initiateBoard(data.board, data.players);
                 updateBoard(data.board);
+
+
+                if (data.initialPositions) {
+                    // Assuming initialPositions is an array with the same index as player IDs
+                    const initialPos = data.initialPositions.find(pos => pos.id == myPlayerId);
+                    if (initialPos) {
+                        // alert(`My initial position: (${initialPos.x}, ${initialPos.y})`);
+                        currentPlayerX = initialPos.x;
+                        currentPlayerY = initialPos.y;
+                    }
+                }
+
                 break;
             case 'update':
                 updateBoard(data.board);
+
+                if (data.lastPositions) {
+                    // Assuming currentPlayerId holds the current player's ID
+                    lastPos = data.lastPositions[myPlayerId];
+                    if (lastPos) {
+                        // alert(`My last position: (${lastPos.x}, ${lastPos.y})`);
+                        currentPlayerX = lastPos.x;
+                        currentPlayerY = lastPos.y;
+                    }
+                }
+                
+
+
                 if (data.currentTurn === myPlayerId) {
+
                     document.getElementById('turnIndicator').textContent = 'Your turn';
-                    //document.getElementById('moveButton').disabled = false;
+
                     document.getElementById('moveUp').disabled = false;
                     document.getElementById('moveDown').disabled = false;
                     document.getElementById('moveLeft').disabled = false;
@@ -64,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.getElementById('suggestButton').disabled = false; // Enable suggest button
                 } else {
                     document.getElementById('turnIndicator').textContent = `Player ${data.currentTurn}'s turn`;
-                    //document.getElementById('moveButton').disabled = true;
+
                     document.getElementById('moveUp').disabled = true;
                     document.getElementById('moveDown').disabled = true;
                     document.getElementById('moveLeft').disabled = true;
@@ -73,10 +112,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 break;
 
-            case 'yourCards': // Assuming 'yourCards' is the type when cards are sent
-                displayCards(data.cards.suspects, 'suspectCards');
-                displayCards(data.cards.weapons, 'weaponCards');
-                displayCards(data.cards.rooms, 'roomCards');
+            case 'yourCards': 
+                // displayCards(data.cards.suspects, 'suspectCards');
+                // displayCards(data.cards.weapons, 'weaponCards');
+                // displayCards(data.cards.rooms, 'roomCards');
+                displayCards(data.cards, 'allcards');
+
+
+
                 break;
 
 
@@ -88,29 +131,77 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    document.getElementById('startGame').addEventListener('click', () => {
+        
+        const playerCount = document.getElementById('playerCount').value;
+        
+        ws.send(JSON.stringify({ 
+            type: 'setPlayerCount', 
+            count: parseInt(playerCount, 10)
+        }));
+
+        // this.disabled = true; // 'this' refers to the button clicked
+        document.getElementById('playerCount').disabled = true; // Disable the player count selection
+        document.getElementById('playerCountSelection').style.display = 'none';
+
+    });
+    
+
 
 
     document.getElementById('moveUp').addEventListener('click', () => {
         if (!document.getElementById('moveUp').disabled) {
-            ws.send(JSON.stringify({ type: 'move', direction: 'up', playerId: myPlayerId }));
+            const newX = currentPlayerX;
+            const newY = currentPlayerY - 1;
+            if (!isCellBlocked(newX, newY) && newY >= 0) { // Notice the NOT operator here to ensure logic correctness
+                ws.send(JSON.stringify({ type: 'move', direction: 'up', playerId: myPlayerId }));
+                // Here, you might also want to update currentPlayerX and currentPlayerY to reflect the new position
+            } else {
+                alert('This cell is blocked!');
+            }
         }
     });
+    
+
+
     document.getElementById('moveDown').addEventListener('click', () => {
         if (!document.getElementById('moveDown').disabled) {
-            ws.send(JSON.stringify({ type: 'move', direction: 'down', playerId: myPlayerId }));
-        }
-    });
-    document.getElementById('moveLeft').addEventListener('click', () => {
-        if (!document.getElementById('moveLeft').disabled) {
-            ws.send(JSON.stringify({ type: 'move', direction: 'left', playerId: myPlayerId }));
-        }
-    });
-    document.getElementById('moveRight').addEventListener('click', () => {
-        if (!document.getElementById('moveRight').disabled) {
-            ws.send(JSON.stringify({ type: 'move', direction: 'right', playerId: myPlayerId }));
+            const newX = currentPlayerX;
+            const newY = currentPlayerY + 1; // Moving down increases the Y coordinate
+            if (!isCellBlocked(newX, newY) && newY <= 4) {
+                ws.send(JSON.stringify({ type: 'move', direction: 'down', playerId: myPlayerId }));
+                // Update currentPlayerY after the server confirms the move
+            } else {
+                alert('This cell is blocked!');
+            }
         }
     });
 
+    document.getElementById('moveLeft').addEventListener('click', () => {
+        if (!document.getElementById('moveLeft').disabled) {
+            const newX = currentPlayerX - 1; // Moving left decreases the X coordinate
+            const newY = currentPlayerY;
+            if (!isCellBlocked(newX, newY) && newX >= 0) {
+                ws.send(JSON.stringify({ type: 'move', direction: 'left', playerId: myPlayerId }));
+                // Update currentPlayerX after the server confirms the move
+            } else {
+                alert('This cell is blocked!');
+            }
+        }
+    });
+    
+    document.getElementById('moveRight').addEventListener('click', () => {
+        if (!document.getElementById('moveRight').disabled) {
+            const newX = currentPlayerX + 1; // Moving right increases the X coordinate
+            const newY = currentPlayerY;
+            if (!isCellBlocked(newX, newY) && newX <= 4) {
+                ws.send(JSON.stringify({ type: 'move', direction: 'right', playerId: myPlayerId }));
+                // Update currentPlayerX after the server confirms the move
+            } else {
+                alert('This cell is blocked!');
+            }
+        }
+    });
 
 
 
@@ -156,6 +247,34 @@ function updateBoard(board) {
 
 
 }
+
+function isCellBlocked(x, y) {
+    // These are the coordinates of blocked cells
+    const blockedCells = [
+        { x: 1, y: 3 },
+        { x: 1, y: 1 },
+        { x: 3, y: 3 },
+        { x: 3, y: 1 }
+
+    ];
+
+    // Check if (x, y) matches any blocked cell
+    return blockedCells.some(cell => cell.x === x && cell.y === y);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 function getRoomName_Client(x, y) {
     // Define your room layout here, for example:

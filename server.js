@@ -18,25 +18,71 @@ const initialPlayerPositions = [
 const allCards = {
     suspects: ['Miss Scarlet', 'Colonel Mustard', 'Mrs. White', 'Mr. Green', 'Mrs. Peacock', 'Professor Plum'],
     weapons: ['Candlestick', 'Dagger', 'Lead Pipe', 'Revolver', 'Rope', 'Wrench'],
-    rooms: ['hall', 'study', 'ballroom', 'billiardRoom', 'diningRoom', 'kitchen', 'lounge', 'conservatory', 'library']
+    rooms: ['Hall', 'Study', 'Ballroom', 'Billiard Room', 'Dining Room', 'Kitchen', 'Lounge', 'Conservatory', 'Library']
 
 };
 
-// Function to shuffle and distribute cards
-function distributeCards() {
-    let playerCards = {};
-    let shuffledSuspects = allCards.suspects.sort(() => 0.5 - Math.random());
-    let shuffledWeapons = allCards.weapons.sort(() => 0.5 - Math.random());
-    let shuffledRooms = allCards.rooms.sort(() => 0.5 - Math.random());
 
+let winningCards = {};
+
+function setupWinningCards() {
+    // Randomly select one card from each category
+    winningCards = {
+        suspect: allCards.suspects[Math.floor(Math.random() * allCards.suspects.length)],
+        weapon: allCards.weapons[Math.floor(Math.random() * allCards.weapons.length)],
+        room: allCards.rooms[Math.floor(Math.random() * allCards.rooms.length)]
+    };
+
+    console.log("Winning cards: ", winningCards);
+    // Remove the winning cards from the distribution pool
+    allCards.suspects = allCards.suspects.filter(suspect => suspect !== winningCards.suspect);
+    allCards.weapons = allCards.weapons.filter(weapon => weapon !== winningCards.weapon);
+    allCards.rooms = allCards.rooms.filter(room => room !== winningCards.room);
+}
+
+// Function to shuffle and distribute cards
+// function distributeCards() {
+//     let playerCards = {};
+//     setupWinningCards();
+//     let shuffledSuspects = allCards.suspects.sort(() => 0.5 - Math.random());
+//     let shuffledWeapons = allCards.weapons.sort(() => 0.5 - Math.random());
+//     let shuffledRooms = allCards.rooms.sort(() => 0.5 - Math.random());
+
+//     players.forEach((player, index) => {
+//         // This assumes 'player' has a unique identifier 'playerId'
+//         playerCards[player.playerId] = {
+//             suspects: [shuffledSuspects[index % shuffledSuspects.length]],
+//             weapons: [shuffledWeapons[index % shuffledWeapons.length]],
+//             rooms: [shuffledRooms[index % shuffledRooms.length]]
+//         };
+//     });
+
+//     return playerCards;
+// }
+
+function distributeCards() {
+    setupWinningCards(); // Ensure winning cards are selected and removed first
+    let playerCards = {};
+    // Combine all remaining cards into a single pool
+    const combinedCards = [...allCards.suspects, ...allCards.weapons, ...allCards.rooms];
+    const shuffledCombinedCards = combinedCards.sort(() => 0.5 - Math.random()); // Shuffle combined cards
+
+    // players.forEach((player, index) => {
+    //     // Assign three random cards from the combined pool to each player
+    //     playerCards[player.playerId] = shuffledCombinedCards.slice(index * 3, (index * 3) + 3);
+    // });
     players.forEach((player, index) => {
-        // This assumes 'player' has a unique identifier 'playerId'
-        playerCards[player.playerId] = {
-            suspects: [shuffledSuspects[index % shuffledSuspects.length]],
-            weapons: [shuffledWeapons[index % shuffledWeapons.length]],
-            rooms: [shuffledRooms[index % shuffledRooms.length]]
-        };
+
+        const numPlayers = players.length;
+        const numCardsPerPlayer = Math.floor(shuffledCombinedCards.length / numPlayers);
+
+        const startIndex = index * numCardsPerPlayer;
+        const endIndex = startIndex + numCardsPerPlayer;
+        playerCards[player.playerId] = shuffledCombinedCards.slice(startIndex, endIndex);
     });
+
+
+
 
     return playerCards;
 }
@@ -49,12 +95,11 @@ function distributeCards() {
 
 
 
-
-
 function getNextMove(playerId,i,j) {
     const lastPos = gameState.players[playerId];
     // Example move: one step to the right; ensure you add boundary checks
-    return { x: (lastPos.x + i+5) % 5, y:(lastPos.y + j+5) % 5};
+    // return { x: (lastPos.x + i+5) % 5, y:(lastPos.y + j+5) % 5};
+    return { x: (lastPos.x + i) , y:(lastPos.y + j)};
 }
 
 
@@ -118,7 +163,8 @@ function broadcastGameState() {
     const message = JSON.stringify({
         type: 'update',
         board: gameState.board,
-        currentTurn: gameState.currentTurn
+        currentTurn: gameState.currentTurn,
+        lastPositions: gameState.lastPositions
     });
     players.forEach(client => {
         if (client.readyState === WebSocket.OPEN) {
@@ -178,17 +224,28 @@ let gameState = {
 wss.on('connection', function connection(ws) {
     const playerId = players.length + 1; // Assign player ID based on the order of connection
     console.log(`A new player has connected with ID: ${playerId}.`);
+
+    // Tell the connected client their player ID
+    ws.send(JSON.stringify({ type: 'playerInfo', playerId: playerId, isPlayerOne: playerId === 1 }));
+
     ws.playerId = playerId;
     players.push(ws);
+
+
+
     let playerCards = distributeCards();
+
     console.log('Distributed player cards:', playerCards);
     console.log(`Sending cards to player ${ws.playerId}:`, playerCards[ws.playerId]);
+ // player == 3/6 logic
     // After assigning player ID and other setup:
     ws.send(JSON.stringify({
         type: 'yourCards',
         cards: playerCards[ws.playerId] // Send player-specific cards
     }));
-    
+
+
+
     initialPlayerPositions.forEach(position => {
         // Assign player position
         gameState.players[position.id] = { y: position.y, x: position.x };
@@ -204,10 +261,38 @@ wss.on('connection', function connection(ws) {
 
 //     // Send initial state to the player
     // ws.send(JSON.stringify({ type: 'init', playerId: playerId, board: gameState.board }));
-    ws.send(JSON.stringify({ type: 'init', playerId: playerId, board: gameState.board /*players: gameState.players */}));
+    ws.send(JSON.stringify({ 
+        type: 'init',
+        playerId: playerId,
+        board: gameState.board,
+        initialPositions :initialPlayerPositions 
+        
+    /*players: gameState.players */}));
+
+    // let gameSettings = {
+    //     playerCount: 0
+    // };
 
     ws.on('message', function incoming(message) {
         const data = JSON.parse(message);
+
+
+        if (data.type === 'setPlayerCount')
+        {
+            // Assuming you have a variable to store player count
+            // gameSettings.playerCount = data.count;
+            // console.log('player',gameSettings.playerCount)
+            console.log('player',data.count)
+            totalplayermsg = `waiting total ${data.count} Player for the game`
+            // Logic to wait for the correct number of players before starting
+            // break;
+            broadcastChat(totalplayermsg, ws.playerId);
+
+        }
+
+
+
+
 
         if (data.type === 'move' && data.playerId === currentTurn) {
             // Validate and process the move here
@@ -270,6 +355,7 @@ wss.on('connection', function connection(ws) {
     });
 
     broadcastGameState(); // Send the current game state to the new player
+
 });
 
 console.log('WebSocket server started on ws://localhost:8080');
