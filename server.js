@@ -14,16 +14,65 @@ const initialPlayerPositions = [
 
 
 
-// Assuming these are your cards, modify as necessary
-const allCards = {
-    suspects: ['Miss Scarlet', 'Colonel Mustard', 'Mrs. White', 'Mr. Green', 'Mrs. Peacock', 'Professor Plum'],
-    weapons: ['Candlestick', 'Dagger', 'Lead Pipe', 'Revolver', 'Rope', 'Wrench'],
-    rooms: ['Hall', 'Study', 'Ballroom', 'Billiard Room', 'Dining Room', 'Kitchen', 'Lounge', 'Conservatory', 'Library']
+class Card {
+    constructor(name, type) {
+        this.name = name;
+        this.type = type;
+    }
+}
 
+
+
+
+const allCards = {
+    suspects: [
+        new Card('Miss Scarlet', 'suspect'),
+        new Card('Colonel Mustard', 'suspect'),
+        new Card('Mrs. White', 'suspect'),
+        new Card('Mr. Green', 'suspect'),
+        new Card('Mrs. Peacock', 'suspect'),
+        new Card('Professor Plum', 'suspect'),
+    ],
+    weapons: [
+        new Card('Candlestick', 'weapon'),
+        new Card('Dagger', 'weapon'),
+        new Card('Lead Pipe', 'weapon'),
+        new Card('Revolver', 'weapon'),
+        new Card('Rope', 'weapon'),
+        new Card('Wrench', 'weapon'),
+    ],
+    rooms: [
+        new Card('Hall', 'room'),
+        new Card('Study', 'room'),
+        new Card('Ballroom', 'room'),
+        new Card('Billiard Room', 'room'),
+        new Card('Dining Room', 'room'),
+        new Card('Kitchen', 'room'),
+        new Card('Lounge', 'room'),
+        new Card('Conservatory', 'room'),
+        new Card('Library', 'room'),
+    ]
 };
 
 
+
 let winningCards = {};
+
+
+
+// function setupWinningCards() {
+//     winningCards = {
+//         suspect: allCards.suspects[Math.floor(Math.random() * allCards.suspects.length)],
+//         weapon: allCards.weapons[Math.floor(Math.random() * allCards.weapons.length)],
+//         room: allCards.rooms[Math.floor(Math.random() * allCards.rooms.length)]
+//     };
+
+//     console.log("Winning cards: ", winningCards);
+//     // Filter out the winning cards
+//     allCards.suspects = allCards.suspects.filter(card => card !== winningCards.suspect);
+//     allCards.weapons = allCards.weapons.filter(card => card !== winningCards.weapon);
+//     allCards.rooms = allCards.rooms.filter(card => card !== winningCards.room);
+// }
 
 function setupWinningCards() {
     // Randomly select one card from each category
@@ -40,22 +89,30 @@ function setupWinningCards() {
     allCards.rooms = allCards.rooms.filter(room => room !== winningCards.room);
 }
 
-// Function to shuffle and distribute cards
-// function distributeCards() {
-//     let playerCards = {};
-//     setupWinningCards();
-//     let shuffledSuspects = allCards.suspects.sort(() => 0.5 - Math.random());
-//     let shuffledWeapons = allCards.weapons.sort(() => 0.5 - Math.random());
-//     let shuffledRooms = allCards.rooms.sort(() => 0.5 - Math.random());
 
+// function distributeCards() {
+//     setupWinningCards(); // Ensure winning cards are selected and removed first
+//     let playerCards = {};
+//     // Combine all remaining cards into a single pool
+//     const combinedCards = [...allCards.suspects, ...allCards.weapons, ...allCards.rooms];
+//     const shuffledCombinedCards = combinedCards.sort(() => 0.5 - Math.random()); // Shuffle combined cards
+
+//     // players.forEach((player, index) => {
+//     //     // Assign three random cards from the combined pool to each player
+//     //     playerCards[player.playerId] = shuffledCombinedCards.slice(index * 3, (index * 3) + 3);
+//     // });
 //     players.forEach((player, index) => {
-//         // This assumes 'player' has a unique identifier 'playerId'
-//         playerCards[player.playerId] = {
-//             suspects: [shuffledSuspects[index % shuffledSuspects.length]],
-//             weapons: [shuffledWeapons[index % shuffledWeapons.length]],
-//             rooms: [shuffledRooms[index % shuffledRooms.length]]
-//         };
+
+//         const numPlayers = players.length;
+//         const numCardsPerPlayer = Math.floor(shuffledCombinedCards.length / numPlayers);
+
+//         const startIndex = index * numCardsPerPlayer;
+//         const endIndex = startIndex + numCardsPerPlayer;
+//         playerCards[player.playerId] = shuffledCombinedCards.slice(startIndex, endIndex);
 //     });
+
+
+
 
 //     return playerCards;
 // }
@@ -67,25 +124,17 @@ function distributeCards() {
     const combinedCards = [...allCards.suspects, ...allCards.weapons, ...allCards.rooms];
     const shuffledCombinedCards = combinedCards.sort(() => 0.5 - Math.random()); // Shuffle combined cards
 
-    // players.forEach((player, index) => {
-    //     // Assign three random cards from the combined pool to each player
-    //     playerCards[player.playerId] = shuffledCombinedCards.slice(index * 3, (index * 3) + 3);
-    // });
     players.forEach((player, index) => {
-
         const numPlayers = players.length;
         const numCardsPerPlayer = Math.floor(shuffledCombinedCards.length / numPlayers);
-
         const startIndex = index * numCardsPerPlayer;
         const endIndex = startIndex + numCardsPerPlayer;
         playerCards[player.playerId] = shuffledCombinedCards.slice(startIndex, endIndex);
     });
 
-
-
-
     return playerCards;
 }
+
 
 
 
@@ -239,12 +288,15 @@ wss.on('connection', function connection(ws) {
     console.log(`Sending cards to player ${ws.playerId}:`, playerCards[ws.playerId]);
  // player == 3/6 logic
     // After assigning player ID and other setup:
+    // ws.send(JSON.stringify({
+    //     type: 'yourCards',
+    //     cards: playerCards[ws.playerId] // Send player-specific cards
+    // }));
+
     ws.send(JSON.stringify({
         type: 'yourCards',
-        cards: playerCards[ws.playerId] // Send player-specific cards
+        cards: playerCards[ws.playerId].map(card => card.name) // Send player-specific card names
     }));
-
-
 
     initialPlayerPositions.forEach(position => {
         // Assign player position
