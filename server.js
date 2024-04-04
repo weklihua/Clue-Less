@@ -119,50 +119,158 @@ function distributeCards() {
 
 
 
+// Define a GameBoard class to encapsulate board logic
+class GameBoard {
+    constructor(width, height) {
+        this.width = width;
+        this.height = height;
+        this.board = this.createInitialBoard(width, height);
+    }
 
+    createInitialBoard(width, height) {
+        const board = Array.from({ length: height }, () => Array.from({ length: width }, () => ({ name: '', blocked: false })));
+        
+        // Define room configurations based on the previous getRoomName_Server logic
+        // const roomConfigurations = [
+        //     { x: 0, y: 0, name: 'Study', blocked: false },
+        //     { x: 0, y: 1, name: 'Hallway', blocked: false },
+        //     { x: 0, y: 2, name: 'Library', blocked: false },
+        //     { x: 0, y: 3, name: 'Hallway', blocked: false },
+        //     { x: 0, y: 4, name: 'Conservatory', blocked: false },
+        //     { x: 1, y: 0, name: 'Hallway', blocked: false },
+        //     { x: 1, y: 1, name: 'Blocked', blocked: true },
+        //     { x: 1, y: 2, name: 'Hallway', blocked: false },
+        //     { x: 1, y: 3, name: 'Blocked', blocked: true },
+        //     { x: 1, y: 4, name: 'Hallway', blocked: false },
+        //     { x: 2, y: 0, name: 'Hall', blocked: false },
+        //     { x: 2, y: 1, name: 'Hallway', blocked: false },
+        //     { x: 2, y: 2, name: 'Billiard Room', blocked: false },
+        //     { x: 2, y: 3, name: 'Hallway', blocked: false },
+        //     { x: 2, y: 4, name: 'Ball Room', blocked: false },
+        //     { x: 3, y: 0, name: 'Hallway', blocked: false },
+        //     { x: 3, y: 1, name: 'Blocked', blocked: true },
+        //     { x: 3, y: 2, name: 'Hallway', blocked: false },
+        //     { x: 3, y: 3, name: 'Blocked', blocked: true },
+        //     { x: 3, y: 4, name: 'Hallway', blocked: false },
+        //     { x: 4, y: 0, name: 'Lounge', blocked: false },
+        //     { x: 4, y: 1, name: 'Hallway', blocked: false },
+        //     { x: 4, y: 2, name: 'Dining Room', blocked: false },
+        //     { x: 4, y: 3, name: 'Hallway', blocked: false },
+        //     { x: 4, y: 4, name: 'Kitchen', blocked: false }
+        // ];
 
+        // // Apply configurations to the board
+        // roomConfigurations.forEach(({ x, y, name, blocked }) => {
+        //     board[x][y] = { name, blocked };
+        // });
 
-function getNextMove(playerId,i,j) {
-    const lastPos = gameState.players[playerId];
-    return { x: (lastPos.x + i) , y:(lastPos.y + j)};
-}
+        return board;
+    }
 
-
-function getRoomName_Server(x, y) {
-    // Define your room layout here, for example:
-    if (x === 0 && y === 0) return 'Study';
-    if (x === 0 && y === 1) return 'Hallway';
-    if (x === 0 && y === 2) return 'library';
-    if (x === 0 && y === 3) return 'Hallway';
-    if (x === 0 && y === 4) return 'Conservatory'; 
-
-    if (x === 1 && y === 0) return 'Hallway';
-    // if (x === 1 && y === 1) return 'Blocked';
-    if (x === 1 && y === 2) return 'Hallway';
-    // if (x === 1 && y === 3) return 'Blocked'; 
-    if (x === 1 && y === 4) return 'Hallway';  
+    // getRoomName(x, y) {
+    //     if (this.board[x][y]) {
+    //         console.log(`Room at (${x}, ${y}): ${this.board[x][y].name}`);
+    //         return this.board[x][y].name;
+    //     }
+    //     console.error(`Attempted to access invalid position (${x}, ${y}).`);
+    //     return ''; // Return empty string if out of bounds or invalid
+    // }
     
-    if (x === 2 && y === 0) return 'Hall';
-    if (x === 2 && y === 1) return 'Hallway';
-    if (x === 2 && y === 2) return 'Billiard Room';
-    if (x === 2 && y === 3) return 'Hallway';
-    if (x === 2 && y === 4) return 'Ball Room'; 
+    // isBlocked(x, y) {
+    //     if (this.board[y] && this.board[y][x]) {
+    //         return this.board[x][y].blocked;
+    //     }
+    //     return false; // Assume out of bounds areas are blocked
+    // }
+    getRoomName(x, y) {
+        // Define your room layout here, for example:
+        if (x === 0 && y === 0) return 'Study';
+        if (x === 0 && y === 1) return 'Hallway';
+        if (x === 0 && y === 2) return 'library';
+        if (x === 0 && y === 3) return 'Hallway';
+        if (x === 0 && y === 4) return 'Conservatory'; 
+    
+        if (x === 1 && y === 0) return 'Hallway';
+        if (x === 1 && y === 1) return 'Blocked'; // 
+        if (x === 1 && y === 2) return 'Hallway';
+        if (x === 1 && y === 3) return 'Blocked'; // 
+        if (x === 1 && y === 4) return 'Hallway';  
+        
+        if (x === 2 && y === 0) return 'Hall';
+        if (x === 2 && y === 1) return 'Hallway';
+        if (x === 2 && y === 2) return 'Billiard Room';
+        if (x === 2 && y === 3) return 'Hallway';
+        if (x === 2 && y === 4) return 'Ball Room'; 
+    
+        if (x === 3 && y === 0) return 'Hallway';
+        if (x === 3 && y === 1) return 'Blocked'; //
+        if (x === 3 && y === 2) return 'Hallway';
+        if (x === 3 && y === 3) return 'Blocked'; //
+        if (x === 3 && y === 4) return 'Hallway';  
+    
+        if (x === 4 && y === 0) return 'Lounge';
+        if (x === 4 && y === 1) return 'Hallway';
+        if (x === 4 && y === 2) return 'Dining Room';
+        if (x === 4 && y === 3) return 'Hallway';
+        if (x === 4 && y === 4) return 'Kitchen'; 
+    
+        // Add more conditions for other rooms
+        return ''; // Return empty string if it's not a special room
+    }
 
-    if (x === 3 && y === 0) return 'Hallway';
-    // if (x === 3 && y === 1) return 'Blocked';
-    if (x === 3 && y === 2) return 'Hallway';
-    // if (x === 3 && y === 3) return 'Blocked'; 
-    if (x === 3 && y === 4) return 'Hallway';  
-
-    if (x === 4 && y === 0) return 'Lounge';
-    if (x === 4 && y === 1) return 'Hallway';
-    if (x === 4 && y === 2) return 'Dining Room';
-    if (x === 4 && y === 3) return 'Hallway';
-    if (x === 4 && y === 4) return 'Kitchen'; 
-
-    // Add more conditions for other rooms
-    return ''; // Return empty string if it's not a special room
+    // Additional methods as needed...
 }
+
+
+
+
+function getNextMove(playerId, i, j) {
+    const lastPos = gameState.players[playerId];
+    const nextX = lastPos.x + i;
+    const nextY = lastPos.y + j;
+
+    // Print out the computed next x and y coordinates
+    console.log(`Next move for player ${playerId}: x = ${nextX}, y = ${nextY}`);
+
+    return { x: nextX, y: nextY };
+}
+
+
+// function getRoomName_Server(x, y) {
+//     // Define your room layout here, for example:
+//     if (x === 0 && y === 0) return 'Study';
+//     if (x === 0 && y === 1) return 'Hallway';
+//     if (x === 0 && y === 2) return 'library';
+//     if (x === 0 && y === 3) return 'Hallway';
+//     if (x === 0 && y === 4) return 'Conservatory'; 
+
+//     if (x === 1 && y === 0) return 'Hallway';
+//     // if (x === 1 && y === 1) return 'Blocked';
+//     if (x === 1 && y === 2) return 'Hallway';
+//     // if (x === 1 && y === 3) return 'Blocked'; 
+//     if (x === 1 && y === 4) return 'Hallway';  
+    
+//     if (x === 2 && y === 0) return 'Hall';
+//     if (x === 2 && y === 1) return 'Hallway';
+//     if (x === 2 && y === 2) return 'Billiard Room';
+//     if (x === 2 && y === 3) return 'Hallway';
+//     if (x === 2 && y === 4) return 'Ball Room'; 
+
+//     if (x === 3 && y === 0) return 'Hallway';
+//     // if (x === 3 && y === 1) return 'Blocked';
+//     if (x === 3 && y === 2) return 'Hallway';
+//     // if (x === 3 && y === 3) return 'Blocked'; 
+//     if (x === 3 && y === 4) return 'Hallway';  
+
+//     if (x === 4 && y === 0) return 'Lounge';
+//     if (x === 4 && y === 1) return 'Hallway';
+//     if (x === 4 && y === 2) return 'Dining Room';
+//     if (x === 4 && y === 3) return 'Hallway';
+//     if (x === 4 && y === 4) return 'Kitchen'; 
+
+//     // Add more conditions for other rooms
+//     return ''; // Return empty string if it's not a special room
+// }
 
 // Function to clear the previous move of a player on the board
 function clearPlayerPreviousMove(playerId) {
@@ -223,30 +331,30 @@ function broadcastChat(message, playerId) {
 
 
 
-function createInitialBoard(width, height) {
-    let board = [];
+// function createInitialBoard(width, height) {
+//     let board = [];
 
-    // Initialize the board with empty arrays for each row
-    for (let i = 0; i < height; i++) {
-        board.push(Array.from({ length: width }, () => 0));
-    }
+//     // Initialize the board with empty arrays for each row
+//     for (let i = 0; i < height; i++) {
+//         board.push(Array.from({ length: width }, () => 0));
+//     }
 
-    // Block positions by setting them to a value that indicates they're blocked.
-    // For example, let's use -1 to indicate a blocked cell.
-    board[1][3] = -1; // Block cell at (1,3)
-    board[1][1] = -1; // Block cell at (1,1)
-    board[3][3] = -1; // Block cell at (3,3)
-    board[3][1] = -1; // Block cell at (3,1)
+//     // Block positions by setting them to a value that indicates they're blocked.
+//     // For example, let's use -1 to indicate a blocked cell.
+//     board[1][3] = -1; // Block cell at (1,3)
+//     board[1][1] = -1; // Block cell at (1,1)
+//     board[3][3] = -1; // Block cell at (3,3)
+//     board[3][1] = -1; // Block cell at (3,1)
 
 
 
-    return board;
-}
-
+//     return board;
+// }
+let gameBoard = new GameBoard(5, 5)
 let currentTurn = 1; // Start with player 1
 let players = [];
 let gameState = {
-    board: createInitialBoard(5, 5), // Initialize a 10x10 board
+    board: gameBoard.board, // Initialize a 10x10 board
     players: {}, // Stores current positions
     lastPositions: {}, // Stores last positions for each player
     currentTurn: 1
@@ -343,11 +451,19 @@ wss.on('connection', function connection(ws) {
             gameState.board[nextMove.y][nextMove.x] = currentTurn; // Set new position on the board
 
                 // Get room name based on coordinates
-            const roomName = getRoomName_Server(nextMove.x, nextMove.y); // Ensure this function exists and returns the correct room name
-
+            const roomName = gameBoard.getRoomName(nextMove.x, nextMove.y); // Ensure this function exists and returns the correct room name
+            // const moveInfocheck = `Player ${data.playerId} moved to x ${nextMove.x} y ${nextMove.y}.`;
+            // for (let x = 0; x < gameBoard.width; x++) {
+            //     for (let y = 0; y < gameBoard.height; y++) {
+            //         const roomName = gameBoard.getRoomName(x, y);
+            //         console.log(`Position (${x}, ${y}): ${roomName}`);
+            //     }
+            // } 
             const moveInfo = `Player ${data.playerId} moved to ${roomName}.`;
 
             broadcastChat(moveInfo, data.playerId); // Use this to broadcast move
+            // broadcastChat(moveInfocheck, data.playerId); // Use this to broadcast move
+
 
             currentTurn = (currentTurn % players.length) + 1; // Move to the next player
             gameState.currentTurn = currentTurn;
@@ -360,11 +476,11 @@ wss.on('connection', function connection(ws) {
         }
 
         if (data.type === 'suggestion') {
-            const roomName = getRoomName_Server(gameState.lastPositions[data.playerId].x, gameState.lastPositions[data.playerId].y); // Ensure this function exists and returns the correct room name
+            const roomName = gameBoard.getRoomName(gameState.lastPositions[data.playerId].x, gameState.lastPositions[data.playerId].y); // Ensure this function exists and returns the correct room name
             const suggestionInfo = `Player ${data.playerId} suggests: ${data.suspect} with the ${data.weapon} at ${roomName}.`;
             broadcastChat(suggestionInfo, data.playerId); // Broadcast suggestion
 
-            console.log('player',playerId,'suspect:', data.suspect,'weapon:',data.weapon );
+            console.log('player',playerId,'suspect:', data.suspect,'weapon:',data.weapon ,'room:',roomName );
         }
         
 
@@ -388,4 +504,4 @@ wss.on('connection', function connection(ws) {
 });
 
 console.log('WebSocket server started on ws://localhost:8080');
-console.log('Board dimensions:', gameState.board.length, gameState.board[0].length); // Show board size
+console.log('Board dimensions:', gameBoard.width, gameBoard.height); // Show board size
