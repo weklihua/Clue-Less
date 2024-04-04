@@ -1,3 +1,5 @@
+// server.js
+
 const WebSocket = require('ws');
 const wss = new WebSocket.Server({ port: 8080 });
 
@@ -14,19 +16,71 @@ const initialPlayerPositions = [
 
 
 
-// Assuming these are your cards, modify as necessary
-const allCards = {
-    suspects: ['Miss Scarlet', 'Colonel Mustard', 'Mrs. White', 'Mr. Green', 'Mrs. Peacock', 'Professor Plum'],
-    weapons: ['Candlestick', 'Dagger', 'Lead Pipe', 'Revolver', 'Rope', 'Wrench'],
-    rooms: ['Hall', 'Study', 'Ballroom', 'Billiard Room', 'Dining Room', 'Kitchen', 'Lounge', 'Conservatory', 'Library']
+class Player {
+    constructor(id, x, y) {
+        this.id = id;
+        this.position = { x, y };
+        this.cardsInHand = [];
+        this.ws = null; // WebSocket connection
+    }
 
+    addCard(card) {
+        this.cardsInHand.push(card);
+    }
+
+    send(message) {
+        if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+            this.ws.send(JSON.stringify(message));
+        }
+    }
+}
+
+
+class Card {
+    constructor(name, type) {
+        this.name = name;
+        this.type = type;
+    }
+}
+
+
+const allCards = {
+    suspects: [
+        new Card('Miss Scarlet', 'suspect'),
+        new Card('Colonel Mustard', 'suspect'),
+        new Card('Mrs. White', 'suspect'),
+        new Card('Mr. Green', 'suspect'),
+        new Card('Mrs. Peacock', 'suspect'),
+        new Card('Professor Plum', 'suspect'),
+    ],
+    weapons: [
+        new Card('Candlestick', 'weapon'),
+        new Card('Dagger', 'weapon'),
+        new Card('Lead Pipe', 'weapon'),
+        new Card('Revolver', 'weapon'),
+        new Card('Rope', 'weapon'),
+        new Card('Wrench', 'weapon'),
+    ],
+    rooms: [
+        new Card('Hall', 'room'),
+        new Card('Study', 'room'),
+        new Card('Ballroom', 'room'),
+        new Card('Billiard Room', 'room'),
+        new Card('Dining Room', 'room'),
+        new Card('Kitchen', 'room'),
+        new Card('Lounge', 'room'),
+        new Card('Conservatory', 'room'),
+        new Card('Library', 'room'),
+    ]
 };
+
 
 
 let winningCards = {};
 
+
+
 function setupWinningCards() {
-    // Randomly select one card from each category
     winningCards = {
         suspect: allCards.suspects[Math.floor(Math.random() * allCards.suspects.length)],
         weapon: allCards.weapons[Math.floor(Math.random() * allCards.weapons.length)],
@@ -34,110 +88,143 @@ function setupWinningCards() {
     };
 
     console.log("Winning cards: ", winningCards);
-    // Remove the winning cards from the distribution pool
     allCards.suspects = allCards.suspects.filter(suspect => suspect !== winningCards.suspect);
     allCards.weapons = allCards.weapons.filter(weapon => weapon !== winningCards.weapon);
     allCards.rooms = allCards.rooms.filter(room => room !== winningCards.room);
 }
 
-// Function to shuffle and distribute cards
-// function distributeCards() {
-//     let playerCards = {};
-//     setupWinningCards();
-//     let shuffledSuspects = allCards.suspects.sort(() => 0.5 - Math.random());
-//     let shuffledWeapons = allCards.weapons.sort(() => 0.5 - Math.random());
-//     let shuffledRooms = allCards.rooms.sort(() => 0.5 - Math.random());
 
-//     players.forEach((player, index) => {
-//         // This assumes 'player' has a unique identifier 'playerId'
-//         playerCards[player.playerId] = {
-//             suspects: [shuffledSuspects[index % shuffledSuspects.length]],
-//             weapons: [shuffledWeapons[index % shuffledWeapons.length]],
-//             rooms: [shuffledRooms[index % shuffledRooms.length]]
-//         };
-//     });
 
-//     return playerCards;
-// }
+
 
 function distributeCards() {
-    setupWinningCards(); // Ensure winning cards are selected and removed first
-    let playerCards = {};
-    // Combine all remaining cards into a single pool
+    setupWinningCards();
     const combinedCards = [...allCards.suspects, ...allCards.weapons, ...allCards.rooms];
-    const shuffledCombinedCards = combinedCards.sort(() => 0.5 - Math.random()); // Shuffle combined cards
+    const shuffledCards = combinedCards.sort(() => 0.5 - Math.random());
 
-    // players.forEach((player, index) => {
-    //     // Assign three random cards from the combined pool to each player
-    //     playerCards[player.playerId] = shuffledCombinedCards.slice(index * 3, (index * 3) + 3);
-    // });
+    const numCardsPerPlayer = Math.floor(shuffledCards.length / players.length);
     players.forEach((player, index) => {
-
-        const numPlayers = players.length;
-        const numCardsPerPlayer = Math.floor(shuffledCombinedCards.length / numPlayers);
-
         const startIndex = index * numCardsPerPlayer;
-        const endIndex = startIndex + numCardsPerPlayer;
-        playerCards[player.playerId] = shuffledCombinedCards.slice(startIndex, endIndex);
+        const cardsForPlayer = shuffledCards.slice(startIndex, startIndex + numCardsPerPlayer);
+        cardsForPlayer.forEach(card => player.addCard(card));
+        player.send({
+            type: 'yourCards',
+            cards: player.cardsInHand.map(card => card.name)
+        });
+
+        // Log distributed cards for each player
+        console.log(`Player ${player.id} cards:`, player.cardsInHand.map(card => card.name));
     });
-
-
-
-
-    return playerCards;
 }
 
 
 
+// Define a GameBoard class to encapsulate board logic
+class GameBoard {
+    constructor(width, height) {
+        this.width = width;
+        this.height = height;
+        this.board = this.createInitialBoard(width, height);
+    }
+
+    createInitialBoard(width, height) {
+        const board = Array.from({ length: height }, () => Array.from({ length: width }, () => ({ name: '', blocked: false })));
+        
 
 
+        return board;
+    }
 
-
-
-
-function getNextMove(playerId,i,j) {
-    const lastPos = gameState.players[playerId];
-    // Example move: one step to the right; ensure you add boundary checks
-    // return { x: (lastPos.x + i+5) % 5, y:(lastPos.y + j+5) % 5};
-    return { x: (lastPos.x + i) , y:(lastPos.y + j)};
-}
-
-
-function getRoomName_Server(x, y) {
-    // Define your room layout here, for example:
-    if (x === 0 && y === 0) return 'Study';
-    if (x === 0 && y === 1) return 'Hallway';
-    if (x === 0 && y === 2) return 'library';
-    if (x === 0 && y === 3) return 'Hallway';
-    if (x === 0 && y === 4) return 'Conservatory'; 
-
-    if (x === 1 && y === 0) return 'Hallway';
-    // if (x === 1 && y === 1) return 'Blocked';
-    if (x === 1 && y === 2) return 'Hallway';
-    // if (x === 1 && y === 3) return 'Blocked'; 
-    if (x === 1 && y === 4) return 'Hallway';  
+   
+    getRoomName(x, y) {
+        // Define your room layout here, for example:
+        if (x === 0 && y === 0) return 'Study';
+        if (x === 0 && y === 1) return 'Hallway';
+        if (x === 0 && y === 2) return 'library';
+        if (x === 0 && y === 3) return 'Hallway';
+        if (x === 0 && y === 4) return 'Conservatory'; 
     
-    if (x === 2 && y === 0) return 'Hall';
-    if (x === 2 && y === 1) return 'Hallway';
-    if (x === 2 && y === 2) return 'Billiard Room';
-    if (x === 2 && y === 3) return 'Hallway';
-    if (x === 2 && y === 4) return 'Ball Room'; 
+        if (x === 1 && y === 0) return 'Hallway';
+        if (x === 1 && y === 1) return 'Blocked'; // 
+        if (x === 1 && y === 2) return 'Hallway';
+        if (x === 1 && y === 3) return 'Blocked'; // 
+        if (x === 1 && y === 4) return 'Hallway';  
+        
+        if (x === 2 && y === 0) return 'Hall';
+        if (x === 2 && y === 1) return 'Hallway';
+        if (x === 2 && y === 2) return 'Billiard Room';
+        if (x === 2 && y === 3) return 'Hallway';
+        if (x === 2 && y === 4) return 'Ball Room'; 
+    
+        if (x === 3 && y === 0) return 'Hallway';
+        if (x === 3 && y === 1) return 'Blocked'; //
+        if (x === 3 && y === 2) return 'Hallway';
+        if (x === 3 && y === 3) return 'Blocked'; //
+        if (x === 3 && y === 4) return 'Hallway';  
+    
+        if (x === 4 && y === 0) return 'Lounge';
+        if (x === 4 && y === 1) return 'Hallway';
+        if (x === 4 && y === 2) return 'Dining Room';
+        if (x === 4 && y === 3) return 'Hallway';
+        if (x === 4 && y === 4) return 'Kitchen'; 
+    
+        // Add more conditions for other rooms
+        return ''; // Return empty string if it's not a special room
+    }
 
-    if (x === 3 && y === 0) return 'Hallway';
-    // if (x === 3 && y === 1) return 'Blocked';
-    if (x === 3 && y === 2) return 'Hallway';
-    // if (x === 3 && y === 3) return 'Blocked'; 
-    if (x === 3 && y === 4) return 'Hallway';  
-
-    if (x === 4 && y === 0) return 'Lounge';
-    if (x === 4 && y === 1) return 'Hallway';
-    if (x === 4 && y === 2) return 'Dining Room';
-    if (x === 4 && y === 3) return 'Hallway';
-    if (x === 4 && y === 4) return 'Kitchen'; 
-
-    // Add more conditions for other rooms
-    return ''; // Return empty string if it's not a special room
+    // Additional methods as needed...
 }
+
+
+
+
+function getNextMove(playerId, i, j) {
+    const lastPos = gameState.players[playerId];
+    const nextX = lastPos.x + i;
+    const nextY = lastPos.y + j;
+
+    // Print out the computed next x and y coordinates
+    console.log(`Next move for player ${playerId}: x = ${nextX}, y = ${nextY}`);
+
+    return { x: nextX, y: nextY };
+}
+
+
+// function getRoomName_Server(x, y) {
+//     // Define your room layout here, for example:
+//     if (x === 0 && y === 0) return 'Study';
+//     if (x === 0 && y === 1) return 'Hallway';
+//     if (x === 0 && y === 2) return 'library';
+//     if (x === 0 && y === 3) return 'Hallway';
+//     if (x === 0 && y === 4) return 'Conservatory'; 
+
+//     if (x === 1 && y === 0) return 'Hallway';
+//     // if (x === 1 && y === 1) return 'Blocked';
+//     if (x === 1 && y === 2) return 'Hallway';
+//     // if (x === 1 && y === 3) return 'Blocked'; 
+//     if (x === 1 && y === 4) return 'Hallway';  
+    
+//     if (x === 2 && y === 0) return 'Hall';
+//     if (x === 2 && y === 1) return 'Hallway';
+//     if (x === 2 && y === 2) return 'Billiard Room';
+//     if (x === 2 && y === 3) return 'Hallway';
+//     if (x === 2 && y === 4) return 'Ball Room'; 
+
+//     if (x === 3 && y === 0) return 'Hallway';
+//     // if (x === 3 && y === 1) return 'Blocked';
+//     if (x === 3 && y === 2) return 'Hallway';
+//     // if (x === 3 && y === 3) return 'Blocked'; 
+//     if (x === 3 && y === 4) return 'Hallway';  
+
+//     if (x === 4 && y === 0) return 'Lounge';
+//     if (x === 4 && y === 1) return 'Hallway';
+//     if (x === 4 && y === 2) return 'Dining Room';
+//     if (x === 4 && y === 3) return 'Hallway';
+//     if (x === 4 && y === 4) return 'Kitchen'; 
+
+//     // Add more conditions for other rooms
+//     return ''; // Return empty string if it's not a special room
+// }
 
 // Function to clear the previous move of a player on the board
 function clearPlayerPreviousMove(playerId) {
@@ -162,22 +249,35 @@ function clearPlayerPreviousMove(playerId) {
 function broadcastGameState() {
     const message = JSON.stringify({
         type: 'update',
-        board: gameState.board,
+        board: gameState.board.map(row => row.map(cell => cell || 0)), // Ensure undefined cells are represented as 0 or a similar placeholder
         currentTurn: gameState.currentTurn,
-        lastPositions: gameState.lastPositions
+        lastPositions: gameState.lastPositions,
     });
-    players.forEach(client => {
-        if (client.readyState === WebSocket.OPEN) {
-            client.send(message);
+    players.forEach(player => {
+        if (player.ws && player.ws.readyState === WebSocket.OPEN) {
+            player.ws.send(message);
         }
     });
 }
+
+// function broadcastChat(message, playerId) {
+//     const chatMessage = JSON.stringify({ type: 'chat', message, sender: `Player ${playerId}` });
+//     players.forEach(client => {
+//         if (client.readyState === WebSocket.OPEN) {
+//             client.send(chatMessage);
+//         }
+//     });
+// }
 
 function broadcastChat(message, playerId) {
     const chatMessage = JSON.stringify({ type: 'chat', message, sender: `Player ${playerId}` });
-    players.forEach(client => {
-        if (client.readyState === WebSocket.OPEN) {
-            client.send(chatMessage);
+    console.log(`Broadcasting message from Player ${playerId}: ${message}`); // Log the message being sent
+    players.forEach(player => {
+        if (player.ws && player.ws.readyState === WebSocket.OPEN) {
+            player.ws.send(chatMessage);
+            console.log(`Sent to Player ${player.id}`); // Log the recipient of the message
+        } else {
+            console.log(`Connection not open for Player ${player.id}`); // Log if the connection is not open
         }
     });
 }
@@ -185,93 +285,87 @@ function broadcastChat(message, playerId) {
 
 
 
-function createInitialBoard(width, height) {
-    let board = [];
+// function createInitialBoard(width, height) {
+//     let board = [];
 
-    // Initialize the board with empty arrays for each row
-    for (let i = 0; i < height; i++) {
-        board.push(Array.from({ length: width }, () => 0));
-    }
+//     // Initialize the board with empty arrays for each row
+//     for (let i = 0; i < height; i++) {
+//         board.push(Array.from({ length: width }, () => 0));
+//     }
 
-    // Block positions by setting them to a value that indicates they're blocked.
-    // For example, let's use -1 to indicate a blocked cell.
-    board[1][3] = -1; // Block cell at (1,3)
-    board[1][1] = -1; // Block cell at (1,1)
-    board[3][3] = -1; // Block cell at (3,3)
-    board[3][1] = -1; // Block cell at (3,1)
+//     // Block positions by setting them to a value that indicates they're blocked.
+//     // For example, let's use -1 to indicate a blocked cell.
+//     board[1][3] = -1; // Block cell at (1,3)
+//     board[1][1] = -1; // Block cell at (1,1)
+//     board[3][3] = -1; // Block cell at (3,3)
+//     board[3][1] = -1; // Block cell at (3,1)
 
 
 
-    return board;
-}
-
+//     return board;
+// }
+let gameBoard = new GameBoard(5, 5)
 let currentTurn = 1; // Start with player 1
 let players = [];
 let gameState = {
-    board: createInitialBoard(5, 5), // Initialize a 10x10 board
+    board: gameBoard.board, // Initialize a 10x10 board
     players: {}, // Stores current positions
     lastPositions: {}, // Stores last positions for each player
     currentTurn: 1
     
 };
 
-// Later, when initializing a game or round:
-
-
-
 
 // WebSocket connection setup
 wss.on('connection', function connection(ws) {
-    const playerId = players.length + 1; // Assign player ID based on the order of connection
+    // const playerId = players.length + 1; // Assign player ID based on the order of connection
+    // console.log(`A new player has connected with ID: ${playerId}.`);
+    // Tell the connected client their player ID
+    // ws.send(JSON.stringify({ type: 'playerInfo', playerId: playerId, isPlayerOne: playerId === 1 }));
+    // ws.playerId = playerId;
+    // players.push(ws);
+    // let playerCards = distributeCards();
+
+
+    const playerId = players.length + 1;
     console.log(`A new player has connected with ID: ${playerId}.`);
 
-    // Tell the connected client their player ID
-    ws.send(JSON.stringify({ type: 'playerInfo', playerId: playerId, isPlayerOne: playerId === 1 }));
+    // Find the initial position for the new player
+    const initialPosition = initialPlayerPositions.find(pos => pos.id === playerId);
 
-    ws.playerId = playerId;
-    players.push(ws);
+    // Create a new player instance with the initial position
+    const player = new Player(playerId, initialPosition?.x || 0, initialPosition?.y || 0);
+    player.ws = ws; // Assign the WebSocket connection to the player
+    players.push(player); // Add the player to the players array
 
-
-
-    let playerCards = distributeCards();
-
-    console.log('Distributed player cards:', playerCards);
-    console.log(`Sending cards to player ${ws.playerId}:`, playerCards[ws.playerId]);
- // player == 3/6 logic
-    // After assigning player ID and other setup:
-    ws.send(JSON.stringify({
-        type: 'yourCards',
-        cards: playerCards[ws.playerId] // Send player-specific cards
-    }));
-
-
-
-    initialPlayerPositions.forEach(position => {
-        // Assign player position
-        gameState.players[position.id] = { y: position.y, x: position.x };
-        
-        if (playerId === position.id && (gameState.lastPositions[playerId])=== undefined)
-            {gameState.board[position.y][position.x]=playerId}
-
-    
-
+    // Send player info to the newly connected player
+    player.send({
+        type: 'playerInfo',
+        playerId: playerId,
+        isPlayerOne: playerId === 1
     });
 
+    // Distribute cards to all players
+    distributeCards();
 
+    // No need to send cards here as distributeCards function already does it
 
-//     // Send initial state to the player
-    // ws.send(JSON.stringify({ type: 'init', playerId: playerId, board: gameState.board }));
-    ws.send(JSON.stringify({ 
+    // Set the initial positions for the players on the game board
+    initialPlayerPositions.forEach(position => {
+        gameState.players[position.id] = { x: position.x, y: position.y };
+        if (playerId === position.id) {
+            gameState.board[position.y][position.x] = playerId; // Mark the player's position on the board
+        }
+    });
+
+    // Send the initial game state to the player
+    ws.send(JSON.stringify({
         type: 'init',
         playerId: playerId,
         board: gameState.board,
-        initialPositions :initialPlayerPositions 
-        
-    /*players: gameState.players */}));
+        initialPositions: initialPlayerPositions
+    }));
 
-    // let gameSettings = {
-    //     playerCount: 0
-    // };
 
     ws.on('message', function incoming(message) {
         const data = JSON.parse(message);
@@ -286,18 +380,13 @@ wss.on('connection', function connection(ws) {
             totalplayermsg = `waiting total ${data.count} Player for the game`
             // Logic to wait for the correct number of players before starting
             // break;
-            broadcastChat(totalplayermsg, ws.playerId);
+            broadcastChat(totalplayermsg, data.playerId);
 
         }
 
 
-
-
-
         if (data.type === 'move' && data.playerId === currentTurn) {
-            // Validate and process the move here
-            // This example uses a random move for simplicity; replace with actual move logic
-            // const nextMove = getRandomMove();
+
             if (data.direction === "down")      {i=0,j=1 } 
             if (data.direction === "up")        {i=0,j=-1}
             if (data.direction === "left")      {i=-1,j=0} 
@@ -316,12 +405,19 @@ wss.on('connection', function connection(ws) {
             gameState.board[nextMove.y][nextMove.x] = currentTurn; // Set new position on the board
 
                 // Get room name based on coordinates
-            const roomName = getRoomName_Server(nextMove.x, nextMove.y); // Ensure this function exists and returns the correct room name
+            const roomName = gameBoard.getRoomName(nextMove.x, nextMove.y); // Ensure this function exists and returns the correct room name
+            // const moveInfocheck = `Player ${data.playerId} moved to x ${nextMove.x} y ${nextMove.y}.`;
+            // for (let x = 0; x < gameBoard.width; x++) {
+            //     for (let y = 0; y < gameBoard.height; y++) {
+            //         const roomName = gameBoard.getRoomName(x, y);
+            //         console.log(`Position (${x}, ${y}): ${roomName}`);
+            //     }
+            // } 
+            const moveInfo = `Player ${data.playerId} moved to ${roomName}.`;
 
-            const moveInfo = `Player ${ws.playerId} moved to ${roomName}.`;
+            broadcastChat(moveInfo, data.playerId); // Use this to broadcast move
+            // broadcastChat(moveInfocheck, data.playerId); // Use this to broadcast move
 
-            //const moveInfo = `Player ${ws.playerId} moved to (${nextMove.x}, ${nextMove.y}).`;
-            broadcastChat(moveInfo, ws.playerId); // Use this to broadcast move
 
             currentTurn = (currentTurn % players.length) + 1; // Move to the next player
             gameState.currentTurn = currentTurn;
@@ -329,25 +425,28 @@ wss.on('connection', function connection(ws) {
         }
 
         if (data.type === 'chat') {
-            broadcastChat(data.message, ws.playerId);
+            broadcastChat(data.message, data.playerId);
             console.log('player',playerId,'said:', data.message);
         }
 
         if (data.type === 'suggestion') {
-            // const suggestionInfo = `Player ${ws.playerId} suggests: ${data.suspect} with the ${data.weapon} at position (x: ${gameState.lastPositions[ws.playerId].x} y: ${gameState.lastPositions[ws.playerId].y}).`;
-            const roomName = getRoomName_Server(gameState.lastPositions[ws.playerId].x, gameState.lastPositions[ws.playerId].y); // Ensure this function exists and returns the correct room name
-            const suggestionInfo = `Player ${ws.playerId} suggests: ${data.suspect} with the ${data.weapon} at ${roomName}.`;
-            broadcastChat(suggestionInfo, ws.playerId); // Broadcast suggestion
+            const roomName = gameBoard.getRoomName(gameState.lastPositions[data.playerId].x, gameState.lastPositions[data.playerId].y); // Ensure this function exists and returns the correct room name
+            const suggestionInfo = `Player ${data.playerId} suggests: ${data.suspect} with the ${data.weapon} at ${roomName}.`;
+            broadcastChat(suggestionInfo, data.playerId); // Broadcast suggestion
 
-            console.log('player',playerId,'suspect:', data.suspect,'weapon:',data.weapon );
+            console.log('player',playerId,'suspect:', data.suspect,'weapon:',data.weapon ,'room:',roomName );
         }
         
 
     });
 
     ws.on('close', function() {
-        console.log(`Player ${ws.playerId} has disconnected.`);
+        // console.log(`Player ${ws.playerId} has disconnected.`);
         // Remove player from the game
+
+        console.log(`Player ${playerId} has disconnected.`);
+        players = players.filter(p => p.id !== playerId);
+        
         players = players.filter(player => player !== ws);
         if (players.length < 2) {
             // Reset the game if necessary
@@ -359,4 +458,4 @@ wss.on('connection', function connection(ws) {
 });
 
 console.log('WebSocket server started on ws://localhost:8080');
-console.log('Board dimensions:', gameState.board.length, gameState.board[0].length); // Show board size
+console.log('Board dimensions:', gameBoard.width, gameBoard.height); // Show board size

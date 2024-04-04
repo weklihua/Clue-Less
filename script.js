@@ -1,3 +1,7 @@
+// script.js
+
+
+
 document.addEventListener('DOMContentLoaded', () => {
     const ws = new WebSocket('ws://localhost:8080'); // Update with your actual WebSocket server URL
     let myPlayerId = null;
@@ -48,7 +52,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Check if this client is Player 1
                 if (data.isPlayerOne) {
                     // Show the player count selection for Player 1
-                    // alert(data.isPlayerOne);
                     document.getElementById('playerCountSelection').style.display = 'block';
                 } else {
                     // Hide the player count selection for other players
@@ -65,10 +68,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
                 if (data.initialPositions) {
-                    // Assuming initialPositions is an array with the same index as player IDs
                     const initialPos = data.initialPositions.find(pos => pos.id == myPlayerId);
                     if (initialPos) {
-                        // alert(`My initial position: (${initialPos.x}, ${initialPos.y})`);
                         currentPlayerX = initialPos.x;
                         currentPlayerY = initialPos.y;
                     }
@@ -79,10 +80,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 updateBoard(data.board);
 
                 if (data.lastPositions) {
-                    // Assuming currentPlayerId holds the current player's ID
                     lastPos = data.lastPositions[myPlayerId];
                     if (lastPos) {
-                        // alert(`My last position: (${lastPos.x}, ${lastPos.y})`);
                         currentPlayerX = lastPos.x;
                         currentPlayerY = lastPos.y;
                     }
@@ -113,9 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 break;
 
             case 'yourCards': 
-                // displayCards(data.cards.suspects, 'suspectCards');
-                // displayCards(data.cards.weapons, 'weaponCards');
-                // displayCards(data.cards.rooms, 'roomCards');
+
                 displayCards(data.cards, 'allcards');
 
 
@@ -137,7 +134,9 @@ document.addEventListener('DOMContentLoaded', () => {
         
         ws.send(JSON.stringify({ 
             type: 'setPlayerCount', 
-            count: parseInt(playerCount, 10)
+            count: parseInt(playerCount, 10),
+            playerId: myPlayerId 
+            
         }));
 
         // this.disabled = true; // 'this' refers to the button clicked
@@ -214,15 +213,19 @@ function updateBoard(board) {
         row.forEach((cell, x) => {
             const cellElement = document.createElement('div');
             cellElement.className = 'cell';
+
+            // Optional: Set data attributes for cell coordinates
+            cellElement.dataset.x = x;
+            cellElement.dataset.y = y;
             // Assign a class based on the player number or cell type
             if (cell > 0) {
-
                 cellElement.classList.add(`player${cell}`);
                 cellElement.classList.add(`piece`);
-
-
-
+            } else if (cell === -1) { // Assuming -1 indicates a blocked cell
+                cellElement.classList.add('blocked');
             }
+
+            
             // Here, assign names to specific cells
             if ((x === 1 && y === 3) || (x === 1 && y === 1) || (x === 3 && y === 3) || (x === 3 && y === 1)) {
                 cellElement.classList.add('blocked'); // You already have this for blocked cells
@@ -237,16 +240,14 @@ function updateBoard(board) {
                 if (roomName === 'Hallway' && (x ===1 || x===3 )){
                     cellElement.classList.add('hallway_Vertical');
                 }            
-
-
-
             }
             gameBoard.appendChild(cellElement);
         });
     });
-
-
 }
+
+
+
 
 function isCellBlocked(x, y) {
     // These are the coordinates of blocked cells
@@ -326,12 +327,13 @@ document.getElementById('sendButton').addEventListener('click', () => {
 
 function displayChatMessage(message, sender) {
     const chatBox = document.getElementById('chatBox');
-    // Ensure messages from self also display properly
-    //const senderName = sender === myPlayerId ? 'You' : `Player ${sender}`;
+
     senderName  = ` ${sender}` 
     chatBox.innerHTML += `<p><strong>${senderName}:</strong> ${message}</p>`; // Append new message
     chatBox.scrollTop = chatBox.scrollHeight; // Scroll to the bottom
 }
+
+
 
 
 
