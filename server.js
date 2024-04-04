@@ -130,58 +130,12 @@ class GameBoard {
     createInitialBoard(width, height) {
         const board = Array.from({ length: height }, () => Array.from({ length: width }, () => ({ name: '', blocked: false })));
         
-        // Define room configurations based on the previous getRoomName_Server logic
-        // const roomConfigurations = [
-        //     { x: 0, y: 0, name: 'Study', blocked: false },
-        //     { x: 0, y: 1, name: 'Hallway', blocked: false },
-        //     { x: 0, y: 2, name: 'Library', blocked: false },
-        //     { x: 0, y: 3, name: 'Hallway', blocked: false },
-        //     { x: 0, y: 4, name: 'Conservatory', blocked: false },
-        //     { x: 1, y: 0, name: 'Hallway', blocked: false },
-        //     { x: 1, y: 1, name: 'Blocked', blocked: true },
-        //     { x: 1, y: 2, name: 'Hallway', blocked: false },
-        //     { x: 1, y: 3, name: 'Blocked', blocked: true },
-        //     { x: 1, y: 4, name: 'Hallway', blocked: false },
-        //     { x: 2, y: 0, name: 'Hall', blocked: false },
-        //     { x: 2, y: 1, name: 'Hallway', blocked: false },
-        //     { x: 2, y: 2, name: 'Billiard Room', blocked: false },
-        //     { x: 2, y: 3, name: 'Hallway', blocked: false },
-        //     { x: 2, y: 4, name: 'Ball Room', blocked: false },
-        //     { x: 3, y: 0, name: 'Hallway', blocked: false },
-        //     { x: 3, y: 1, name: 'Blocked', blocked: true },
-        //     { x: 3, y: 2, name: 'Hallway', blocked: false },
-        //     { x: 3, y: 3, name: 'Blocked', blocked: true },
-        //     { x: 3, y: 4, name: 'Hallway', blocked: false },
-        //     { x: 4, y: 0, name: 'Lounge', blocked: false },
-        //     { x: 4, y: 1, name: 'Hallway', blocked: false },
-        //     { x: 4, y: 2, name: 'Dining Room', blocked: false },
-        //     { x: 4, y: 3, name: 'Hallway', blocked: false },
-        //     { x: 4, y: 4, name: 'Kitchen', blocked: false }
-        // ];
 
-        // // Apply configurations to the board
-        // roomConfigurations.forEach(({ x, y, name, blocked }) => {
-        //     board[x][y] = { name, blocked };
-        // });
 
         return board;
     }
 
-    // getRoomName(x, y) {
-    //     if (this.board[x][y]) {
-    //         console.log(`Room at (${x}, ${y}): ${this.board[x][y].name}`);
-    //         return this.board[x][y].name;
-    //     }
-    //     console.error(`Attempted to access invalid position (${x}, ${y}).`);
-    //     return ''; // Return empty string if out of bounds or invalid
-    // }
-    
-    // isBlocked(x, y) {
-    //     if (this.board[y] && this.board[y][x]) {
-    //         return this.board[x][y].blocked;
-    //     }
-    //     return false; // Assume out of bounds areas are blocked
-    // }
+   
     getRoomName(x, y) {
         // Define your room layout here, for example:
         if (x === 0 && y === 0) return 'Study';
