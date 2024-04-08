@@ -1,6 +1,6 @@
 // Suspects:
 let plum = {
-   name: "Prof. Plum",
+   name: 'Professor Plum',
    image: null,
    color: "red",
 };
@@ -12,13 +12,13 @@ let scarlet = {
 }
 
 let mustard = {
-   name: "Col Mustard",
+   name: "Colonel Mustard",
    image: null,
    color: "yellow",
 }
 
 let white = {
-   name: "Mrs White",
+   name: "Mrs. White",
    image: null,
    color: "green",
 }
@@ -30,19 +30,19 @@ let green = {
 }
 
 let peacock = {
-   name: "Mrs Peacock",
+   name: "Mrs. Peacock",
    image: null,
    color: "purple",
 }
 
 // weapons: 
 let candlestick = {
-   name : "Candle Stick",
+   name : "Candlestick",
    image: null,
 }
 
 let wrench = {
-   name: "wrench",
+   name: "Wrench",
    image: null,
 }
 
@@ -52,23 +52,23 @@ let leadPipe = {
 }
 
 let rope = {
-   name: "rope",
+   name: "Rope",
    image: null,
 }
 
 let dagger = {
-   name: "dagger",
+   name: "Dagger",
    image: null,
 }
 
 let revolver = {
-   name: "revolver",
+   name: "Revolver",
    image: null,
 }
 
 //rooms:
 let study = {
-   name: "Study Room",
+   name: "Study",
    image: null,
 }
 
@@ -103,7 +103,7 @@ let conservatory = {
 }
 
 let ballroom = {
-   name: "Ballroom",
+   name: "Ball room",
    image: null,
 }
 

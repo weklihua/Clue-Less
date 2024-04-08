@@ -140,7 +140,7 @@ class GameBoard {
         // Define your room layout here, for example:
         if (x === 0 && y === 0) return 'Study';
         if (x === 0 && y === 1) return 'Hallway';
-        if (x === 0 && y === 2) return 'library';
+        if (x === 0 && y === 2) return 'Library';
         if (x === 0 && y === 3) return 'Hallway';
         if (x === 0 && y === 4) return 'Conservatory'; 
     
@@ -190,41 +190,6 @@ function getNextMove(playerId, i, j) {
 }
 
 
-// function getRoomName_Server(x, y) {
-//     // Define your room layout here, for example:
-//     if (x === 0 && y === 0) return 'Study';
-//     if (x === 0 && y === 1) return 'Hallway';
-//     if (x === 0 && y === 2) return 'library';
-//     if (x === 0 && y === 3) return 'Hallway';
-//     if (x === 0 && y === 4) return 'Conservatory'; 
-
-//     if (x === 1 && y === 0) return 'Hallway';
-//     // if (x === 1 && y === 1) return 'Blocked';
-//     if (x === 1 && y === 2) return 'Hallway';
-//     // if (x === 1 && y === 3) return 'Blocked'; 
-//     if (x === 1 && y === 4) return 'Hallway';  
-    
-//     if (x === 2 && y === 0) return 'Hall';
-//     if (x === 2 && y === 1) return 'Hallway';
-//     if (x === 2 && y === 2) return 'Billiard Room';
-//     if (x === 2 && y === 3) return 'Hallway';
-//     if (x === 2 && y === 4) return 'Ball Room'; 
-
-//     if (x === 3 && y === 0) return 'Hallway';
-//     // if (x === 3 && y === 1) return 'Blocked';
-//     if (x === 3 && y === 2) return 'Hallway';
-//     // if (x === 3 && y === 3) return 'Blocked'; 
-//     if (x === 3 && y === 4) return 'Hallway';  
-
-//     if (x === 4 && y === 0) return 'Lounge';
-//     if (x === 4 && y === 1) return 'Hallway';
-//     if (x === 4 && y === 2) return 'Dining Room';
-//     if (x === 4 && y === 3) return 'Hallway';
-//     if (x === 4 && y === 4) return 'Kitchen'; 
-
-//     // Add more conditions for other rooms
-//     return ''; // Return empty string if it's not a special room
-// }
 
 // Function to clear the previous move of a player on the board
 function clearPlayerPreviousMove(playerId) {
@@ -260,14 +225,7 @@ function broadcastGameState() {
     });
 }
 
-// function broadcastChat(message, playerId) {
-//     const chatMessage = JSON.stringify({ type: 'chat', message, sender: `Player ${playerId}` });
-//     players.forEach(client => {
-//         if (client.readyState === WebSocket.OPEN) {
-//             client.send(chatMessage);
-//         }
-//     });
-// }
+
 
 function broadcastChat(message, playerId) {
     const chatMessage = JSON.stringify({ type: 'chat', message, sender: `Player ${playerId}` });
@@ -285,25 +243,38 @@ function broadcastChat(message, playerId) {
 
 
 
-// function createInitialBoard(width, height) {
-//     let board = [];
-
-//     // Initialize the board with empty arrays for each row
-//     for (let i = 0; i < height; i++) {
-//         board.push(Array.from({ length: width }, () => 0));
-//     }
-
-//     // Block positions by setting them to a value that indicates they're blocked.
-//     // For example, let's use -1 to indicate a blocked cell.
-//     board[1][3] = -1; // Block cell at (1,3)
-//     board[1][1] = -1; // Block cell at (1,1)
-//     board[3][3] = -1; // Block cell at (3,3)
-//     board[3][1] = -1; // Block cell at (3,1)
 
 
 
-//     return board;
-// }
+function handleAccusation(playerId, suspect, weapon, room) {
+    // Log the accusation
+    console.log(`Player ${playerId} accuses ${suspect} with the ${weapon} in the ${room}.`);
+    console.log(`Winning cards are ${winningCards.suspect.name}, ${winningCards.weapon.name}, ${winningCards.room.name}.`);
+
+
+    // Check if the accusation matches the winning cards
+    if (suspect === winningCards.suspect.name &&
+        weapon === winningCards.weapon.name &&
+        room === winningCards.room.name) {
+        // If the accusation is correct, broadcast the winner and end the game
+        let winmessage =`Winner is  ${playerId} , ${suspect} with the ${weapon} in the ${room}.`
+        console.log(`winner is ${playerId} `);
+        broadcastChat(winmessage,playerId);
+        // endGame();
+    } else {
+        // If the accusation is wrong, notify the player (or you might have specific rules for wrong accusations)
+
+        let lostmessage = `Player ${playerId}'s accusation is incorrect. The game continues.`
+        broadcastChat(lostmessage,playerId)
+
+    }
+}
+
+
+
+
+
+
 let gameBoard = new GameBoard(5, 5)
 let currentTurn = 1; // Start with player 1
 let players = [];
@@ -318,13 +289,7 @@ let gameState = {
 
 // WebSocket connection setup
 wss.on('connection', function connection(ws) {
-    // const playerId = players.length + 1; // Assign player ID based on the order of connection
-    // console.log(`A new player has connected with ID: ${playerId}.`);
-    // Tell the connected client their player ID
-    // ws.send(JSON.stringify({ type: 'playerInfo', playerId: playerId, isPlayerOne: playerId === 1 }));
-    // ws.playerId = playerId;
-    // players.push(ws);
-    // let playerCards = distributeCards();
+
 
 
     const playerId = players.length + 1;
@@ -435,6 +400,15 @@ wss.on('connection', function connection(ws) {
             broadcastChat(suggestionInfo, data.playerId); // Broadcast suggestion
 
             console.log('player',playerId,'suspect:', data.suspect,'weapon:',data.weapon ,'room:',roomName );
+        }
+
+        if (data.type === 'accusation') {
+            const roomName = gameBoard.getRoomName(gameState.lastPositions[data.playerId].x, gameState.lastPositions[data.playerId].y); // Ensure this function exists and returns the correct room name
+            const accusationInfo = `Player ${data.playerId} accuses: ${data.suspect} with the ${data.weapon} at ${roomName}.`;
+            broadcastChat(accusationInfo, data.playerId); // Broadcast accusation
+
+            console.log('player',playerId,'suspect:', data.suspect,'weapon:',data.weapon ,'room:',roomName );
+            handleAccusation(data.playerId, data.suspect, data.weapon, roomName)
         }
         
 
