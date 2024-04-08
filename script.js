@@ -100,6 +100,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     
                     document.getElementById('suggestButton').disabled = false; // Enable suggest button
+                    document.getElementById('accuseButton').disabled = false; // Enable suggest button
+
                 } else {
                     document.getElementById('turnIndicator').textContent = `Player ${data.currentTurn}'s turn`;
 
@@ -108,6 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.getElementById('moveLeft').disabled = true;
                     document.getElementById('moveRight').disabled = true;
                     document.getElementById('suggestButton').disabled = true; // Disable suggest button
+                    document.getElementById('accuseButton').disabled = true; // Disable suggest button
                 }
                 break;
 
@@ -281,7 +284,7 @@ function getRoomName_Client(x, y) {
     // Define your room layout here, for example:
     if (x === 0 && y === 0) return 'Study';
     if (x === 0 && y === 1) return 'Hallway';
-    if (x === 0 && y === 2) return 'library';
+    if (x === 0 && y === 2) return 'Library';
     if (x === 0 && y === 3) return 'Hallway';
     if (x === 0 && y === 4) return 'Conservatory'; 
 
@@ -295,7 +298,7 @@ function getRoomName_Client(x, y) {
     if (x === 2 && y === 1) return 'Hallway';
     if (x === 2 && y === 2) return 'Billiard Room';
     if (x === 2 && y === 3) return 'Hallway';
-    if (x === 2 && y === 4) return 'Ball Room'; 
+    if (x === 2 && y === 4) return 'BallRoom'; 
 
     if (x === 3 && y === 0) return 'Hallway';
     // if (x === 3 && y === 1) return 'Blocked';
@@ -352,6 +355,22 @@ document.getElementById('suggestButton').addEventListener('click', () => {
    // }
 });
 
+
+
+document.getElementById('accuseButton').addEventListener('click', () => {
+    //if (!document.getElementById('moveButton').disabled) {
+        const suspect = document.getElementById('suspectsDropdown').value;
+        const weapon = document.getElementById('weaponsDropdown').value;
+
+        ws.send(JSON.stringify({ 
+            type: 'accusation', 
+            suspect, 
+            weapon, 
+            //moveInfo: moveInfo, 
+            playerId: myPlayerId 
+        }));
+   // }
+});
 
 
 });
