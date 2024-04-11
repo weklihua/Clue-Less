@@ -98,6 +98,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.getElementById('moveLeft').disabled = false;
                     document.getElementById('moveRight').disabled = false;
 
+                    // document.getElementById('secretPath').disabled = false;
+
                     
                     document.getElementById('suggestButton').disabled = false; // Enable suggest button
                     document.getElementById('accuseButton').disabled = false; // Enable suggest button
@@ -109,6 +111,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.getElementById('moveDown').disabled = true;
                     document.getElementById('moveLeft').disabled = true;
                     document.getElementById('moveRight').disabled = true;
+
+                    // document.getElementById('secretPath').disabled = true;
+
+
                     document.getElementById('suggestButton').disabled = true; // Disable suggest button
                     document.getElementById('accuseButton').disabled = true; // Disable suggest button
                 }
