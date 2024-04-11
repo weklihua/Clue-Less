@@ -271,10 +271,43 @@ function handleAccusation(playerId, suspect, weapon, room) {
 }
 
 
+function startGame() {
+    gameSettings.isGameStarted = true;
+    distributeCards();
+    initialPlayerPositions.forEach((pos, index) => {
+        // Only set the position for the number of players chosen by player one
+        if (index < gameSettings.expectedNumberOfPlayers) {
+            gameState.players[pos.id] = { x: pos.x, y: pos.y };
+            gameState.board[pos.y][pos.x] = pos.id;
+        }
+    });
 
 
 
 
+    broadcastGameState();
+    console.log('Game has started');
+}
+
+
+function checkStartGame() {
+    if (players.length === gameSettings.expectedNumberOfPlayers && !gameSettings.isGameStarted) {
+        startGame();
+    }
+}
+
+
+
+
+
+
+
+
+
+let gameSettings = {
+    expectedNumberOfPlayers: 0, // This will be set by player one
+    isGameStarted: false,
+};
 let gameBoard = new GameBoard(5, 5)
 let currentTurn = 1; // Start with player 1
 let players = [];
@@ -310,18 +343,9 @@ wss.on('connection', function connection(ws) {
         isPlayerOne: playerId === 1
     });
 
-    // Distribute cards to all players
-    distributeCards();
 
-    // No need to send cards here as distributeCards function already does it
 
-    // Set the initial positions for the players on the game board
-    initialPlayerPositions.forEach(position => {
-        gameState.players[position.id] = { x: position.x, y: position.y };
-        if (playerId === position.id) {
-            gameState.board[position.y][position.x] = playerId; // Mark the player's position on the board
-        }
-    });
+
 
     // Send the initial game state to the player
     ws.send(JSON.stringify({
@@ -336,18 +360,18 @@ wss.on('connection', function connection(ws) {
         const data = JSON.parse(message);
 
 
-        if (data.type === 'setPlayerCount')
-        {
-            // Assuming you have a variable to store player count
-            // gameSettings.playerCount = data.count;
-            // console.log('player',gameSettings.playerCount)
-            console.log('player',data.count)
-            totalplayermsg = `waiting total ${data.count} Player for the game`
-            // Logic to wait for the correct number of players before starting
-            // break;
-            broadcastChat(totalplayermsg, data.playerId);
 
+        if (data.type === 'setPlayerCount' && playerId === 1) {
+            const count = parseInt(data.count);
+            if (count === 3 || count === 6) {
+                gameSettings.expectedNumberOfPlayers = count;
+                console.log(`Player one has set the game for ${count} players.`);
+                checkStartGame(); // Check if we can start the game
+            } else {
+                ws.send(JSON.stringify({ type: 'error', message: 'Invalid number of players. Choose 3 or 6.' }));
+            }
         }
+
 
 
         if (data.type === 'move' && data.playerId === currentTurn) {
@@ -356,6 +380,9 @@ wss.on('connection', function connection(ws) {
             if (data.direction === "up")        {i=0,j=-1}
             if (data.direction === "left")      {i=-1,j=0} 
             if (data.direction === "right")     {i=1,j=0}
+
+            // if (data.direction === "secret")     {i=4,j=4}
+            // if (data.direction === "secret")     {i=-4,j=-4}
 
             const nextMove = getNextMove(data.playerId,i,j);
 
@@ -371,18 +398,11 @@ wss.on('connection', function connection(ws) {
 
                 // Get room name based on coordinates
             const roomName = gameBoard.getRoomName(nextMove.x, nextMove.y); // Ensure this function exists and returns the correct room name
-            // const moveInfocheck = `Player ${data.playerId} moved to x ${nextMove.x} y ${nextMove.y}.`;
-            // for (let x = 0; x < gameBoard.width; x++) {
-            //     for (let y = 0; y < gameBoard.height; y++) {
-            //         const roomName = gameBoard.getRoomName(x, y);
-            //         console.log(`Position (${x}, ${y}): ${roomName}`);
-            //     }
-            // } 
+
             const moveInfo = `Player ${data.playerId} moved to ${roomName}.`;
 
             broadcastChat(moveInfo, data.playerId); // Use this to broadcast move
-            // broadcastChat(moveInfocheck, data.playerId); // Use this to broadcast move
-
+           
 
             currentTurn = (currentTurn % players.length) + 1; // Move to the next player
             gameState.currentTurn = currentTurn;
@@ -415,8 +435,7 @@ wss.on('connection', function connection(ws) {
     });
 
     ws.on('close', function() {
-        // console.log(`Player ${ws.playerId} has disconnected.`);
-        // Remove player from the game
+
 
         console.log(`Player ${playerId} has disconnected.`);
         players = players.filter(p => p.id !== playerId);
