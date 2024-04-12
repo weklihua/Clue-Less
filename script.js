@@ -107,12 +107,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.getElementById('endTurnButton').disabled = false;
                     
 
-                    // document.getElementById('secretPath').disabled = false;
-
-                    
-                    document.getElementById('suggestButton').disabled = false; // Enable suggest button
-                    document.getElementById('accuseButton').disabled = false; // Enable suggest button
-
                 } else {
                     document.getElementById('turnIndicator').textContent = `Player ${data.currentTurn}'s turn`;
 
@@ -122,12 +116,35 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.getElementById('moveRight').disabled = true;
                     document.getElementById('endTurnButton').disabled = true;
 
-                    // document.getElementById('secretPath').disabled = true;
+                }
 
 
+                // Move to Diagonal romm only enable when the player in a room with secret path
+                if ((data.currentTurn === myPlayerId) && isCellRoomSecret(currentPlayerX, currentPlayerY) ) {
+                    document.getElementById('moveUpRight').disabled = false; // Enable button
+                    document.getElementById('moveUpLeft').disabled = false; // Enable button
+                    document.getElementById('moveDownRight').disabled = false; // Enable button
+                    document.getElementById('moveDownLeft').disabled = false; // Enable button
+                } else {
+                    document.getElementById('moveUpRight').disabled = true; // Disable button
+                    document.getElementById('moveUpLeft').disabled = true; // Disable button
+                    document.getElementById('moveDownRight').disabled = true; // Disable button
+                    document.getElementById('moveDownLeft').disabled = true; // Disable button
+                }
+
+                // Make Suggestion or Accusation only enable when the player in a room
+                // SZ Note: we suppose to accusation regardless if the player current in a room.
+                // To achieve that, we need to have a dropdown menu for room. 
+                // Given the time constraint, only enable accusation when the player currently in a room
+                if ((data.currentTurn === myPlayerId) && isCellRoom(currentPlayerX, currentPlayerY) ) {
+                    document.getElementById('suggestButton').disabled = false; // Enable suggest button
+                    document.getElementById('accuseButton').disabled = false; // Enable suggest button
+                } else {
                     document.getElementById('suggestButton').disabled = true; // Disable suggest button
                     document.getElementById('accuseButton').disabled = true; // Disable suggest button
                 }
+                
+
                 break;
 
             case 'yourCards': 
@@ -222,6 +239,58 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
 
+    document.getElementById('moveDownRight').addEventListener('click', () => {
+        if (!document.getElementById('moveDownRight').disabled) {
+            const newX = currentPlayerX + 4;
+            const newY = currentPlayerY + 4;
+            if (newX >= 0 && newX <= 4 && newY >= 0 && newY <= 4 ) { // Notice the NOT operator here to ensure logic correctness
+                ws.send(JSON.stringify({ type: 'move', direction: 'downRight', playerId: myPlayerId }));
+                // Here, you might also want to update currentPlayerX and currentPlayerY to reflect the new position
+            } else {
+                alert('This is an invalid Move! Please select the correct direction!');
+            }
+        }
+    });
+
+    document.getElementById('moveUpRight').addEventListener('click', () => {
+        if (!document.getElementById('moveUpRight').disabled) {
+            const newX = currentPlayerX - 4;
+            const newY = currentPlayerY + 4;
+            if (newX >= 0 && newX <= 4 && newY >= 0 && newY <= 4 ) { // Notice the NOT operator here to ensure logic correctness
+                ws.send(JSON.stringify({ type: 'move', direction: 'upRight', playerId: myPlayerId }));
+                // Here, you might also want to update currentPlayerX and currentPlayerY to reflect the new position
+            } else {
+                alert('This is an invalid Move! Please select the correct direction!');
+            }
+        }
+    });
+
+    document.getElementById('moveUpLeft').addEventListener('click', () => {
+        if (!document.getElementById('moveUpLeft').disabled) {
+            const newX = currentPlayerX - 4;
+            const newY = currentPlayerY - 4;
+            if (newX >= 0 && newX <= 4 && newY >= 0 && newY <= 4 ) { // Notice the NOT operator here to ensure logic correctness
+                ws.send(JSON.stringify({ type: 'move', direction: 'upLeft', playerId: myPlayerId }));
+                // Here, you might also want to update currentPlayerX and currentPlayerY to reflect the new position
+            } else {
+                alert('This is an invalid Move! Please select the correct direction!');
+            }
+        }
+    });
+
+    document.getElementById('moveDownLeft').addEventListener('click', () => {
+        if (!document.getElementById('moveDownLeft').disabled) {
+            const newX = currentPlayerX + 4;
+            const newY = currentPlayerY - 4;
+            if (newX >= 0 && newX <= 4 && newY >= 0 && newY <= 4 ) { // Notice the NOT operator here to ensure logic correctness
+                ws.send(JSON.stringify({ type: 'move', direction: 'downLeft', playerId: myPlayerId }));
+                // Here, you might also want to update currentPlayerX and currentPlayerY to reflect the new position
+            } else {
+                alert('This is an invalid Move! Please select the correct direction!');
+            }
+        }
+    });
+
 
 
 function updateBoard(board) {
@@ -285,11 +354,40 @@ function isCellBlocked(x, y) {
 
 
 
+// Function to check if the current position have secret path
+function isCellRoomSecret(x, y) {
+    // These are the coordinates of Room have secret path
+    const RoomCellsSecret = [
+        { x: 0, y: 0 }, // Study
+        { x: 0, y: 4 }, // Conservatory
+        { x: 4, y: 0 }, // Lounge
+        { x: 4, y: 4 } // Kitchen
+    ];
+
+    // Check if (x, y) matches any room with secret path
+    return RoomCellsSecret.some(cell => cell.x === x && cell.y === y);
+}
 
 
 
+// Function to check if the current position is a room
+function isCellRoom(x, y) {
+    // These are the coordinates of romm
+    const RoomCells = [
+        { x: 0, y: 0 }, // Study
+        { x: 0, y: 2 }, // Library
+        { x: 0, y: 4 }, // Conservatory
+        { x: 2, y: 0 }, // Hall
+        { x: 2, y: 2 }, // Billiard Room
+        { x: 2, y: 4 }, // BallRoom
+        { x: 4, y: 0 }, // Lounge
+        { x: 4, y: 2 }, // Dining Room
+        { x: 4, y: 4 } // Kitchen
+    ];
 
-
+    // Check if (x, y) matches any room
+    return RoomCells.some(cell => cell.x === x && cell.y === y);
+}
 
 
 
