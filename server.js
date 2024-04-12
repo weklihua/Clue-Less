@@ -456,8 +456,10 @@ wss.on('connection', function connection(ws) {
             if (data.direction === "left")      {i=-1,j=0} 
             if (data.direction === "right")     {i=1,j=0}
 
-            // if (data.direction === "secret")     {i=4,j=4}
-            // if (data.direction === "secret")     {i=-4,j=-4}
+            if (data.direction === "downRight")   {i=4,j=4}
+            if (data.direction === "upRight")     {i=-4,j=4}
+            if (data.direction === "upLeft")      {i=-4,j=-4}
+            if (data.direction === "downLeft")    {i=4,j=-4}
 
             const nextMove = getNextMove(data.playerId,i,j);
 
