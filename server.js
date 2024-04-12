@@ -14,15 +14,17 @@ const initialPlayerPositions = [
     { id: 6, x: 0, y: 3 }   /* "Mrs Peacock"*/
 ];
 
-
+const characterNames = ["Professor Plum", "Miss Scarlet", "Colonel Mustard", "Mrs. White", "Mr. Green", "Mrs. Peacock"];
 
 class Player {
-    constructor(id, x, y) {
+    constructor(id, x, y, character) {
         this.id = id;
         this.position = { x, y };
         this.cardsInHand = [];
         this.ws = null; // WebSocket connection
         this.hasMoved = false; // Add this line to track if the player has moved this turn
+        this.character = character; // Directly assign character for simplicity
+    
     }
 
     addCard(card) {
@@ -173,7 +175,16 @@ class GameBoard {
         return ''; // Return empty string if it's not a special room
     }
 
-    // Additional methods as needed...
+    getRoomCoordinates(roomName) {
+        for (let y = 0; y < this.height; y++) {
+            for (let x = 0; x < this.width; x++) {
+                if (this.getRoomName(x, y) === roomName) {
+                    return {x, y};
+                }
+            }
+        }
+        return null; // Return null if no room found
+    }
 }
 
 
@@ -247,29 +258,47 @@ function broadcastChat(message, playerId) {
 
 
 
+
+
+
 function handleAccusation(playerId, suspect, weapon, room) {
-    // Log the accusation
+    const accuser = players.find(p => p.id === playerId);
+    const accused = getPlayerByCharacter(suspect);
+    console.log(`accused ${accused}`);
+
     console.log(`Player ${playerId} accuses ${suspect} with the ${weapon} in the ${room}.`);
     console.log(`Winning cards are ${winningCards.suspect.name}, ${winningCards.weapon.name}, ${winningCards.room.name}.`);
 
-
-    // Check if the accusation matches the winning cards
-    if (suspect === winningCards.suspect.name &&
-        weapon === winningCards.weapon.name &&
-        room === winningCards.room.name) {
-        // If the accusation is correct, broadcast the winner and end the game
-        let winmessage =`Winner is  ${playerId} , ${suspect} with the ${weapon} in the ${room}.`
-        console.log(`winner is ${playerId} `);
-        broadcastChat(winmessage,playerId);
-        // endGame();
-    } else {
-        // If the accusation is wrong, notify the player (or you might have specific rules for wrong accusations)
-
-        let lostmessage = `Player ${playerId}'s accusation is incorrect. The game continues.`
-        broadcastChat(lostmessage,playerId)
-
+    if (!accused) {
+        console.log(`No player found representing the character ${suspect}.`);
+        return;
     }
+
+    console.log(`Player ${playerId} accuses ${suspect} with the ${weapon} in the ${room}.`);
+    console.log(`Winning cards are ${winningCards.suspect.name}, ${winningCards.weapon.name}, ${winningCards.room.name}.`);
+
+    // Move accused player to the specified room
+    const roomCoords = gameBoard.getRoomCoordinates(room);
+    if (roomCoords) {
+        accused.position = roomCoords;
+        clearPlayerPreviousMove(accused.id);
+        gameState.board[roomCoords.y][roomCoords.x] = accused.id;
+        console.log(`Moved ${suspect} to ${room} at coordinates ${roomCoords.x}, ${roomCoords.y}.`);
+    }
+
+    if (suspect === winningCards.suspect.name && weapon === winningCards.weapon.name && room === winningCards.room.name) {
+        let winMessage = `Winner is Player ${playerId}, accusing ${suspect} with the ${weapon} in the ${room}.`;
+        console.log(winMessage);
+        broadcastChat(winMessage, playerId);
+        // End the game logic here if needed
+    } else {
+        let lostMessage = `Player ${playerId}'s accusation is incorrect. The game continues.`;
+        broadcastChat(lostMessage, playerId);
+    }
+
+    broadcastGameState(); 
 }
+
 
 
 function startGame() {
@@ -297,15 +326,20 @@ function checkStartGame() {
     }
 }
 
+function getPlayerByCharacter(characterName) {
+    console.log("Searching for character:", characterName);
+    console.log("Available players:", players.map(p => `${p.id}: ${p.character}`));
 
+    const foundPlayer = players.find(player => player.character === characterName);
 
-// function endTurn() {
-//     currentTurn = (currentTurn % players.length) + 1; // Cycle to the next player
-//     gameState.currentTurn = currentTurn;
-//     // broadcastGameState(); // Send the updated state to all clients
-//     console.log(`Turn has ended. It's now Player ${currentTurn}'s turn.`);
-// }
+    if (foundPlayer) {
+        console.log("Found player:", foundPlayer.id);
+    } else {
+        console.log("No player found for character:", characterName);
+    }
 
+    return foundPlayer;
+}
 
 function endTurn(playerId) {
     const player = players.find(p => p.id === playerId);
@@ -330,6 +364,12 @@ let gameSettings = {
 let gameBoard = new GameBoard(5, 5)
 let currentTurn = 1; // Start with player 1
 let players = [];
+
+// let players = initialPlayerPositions.map((pos, index) => {
+//     let characterNames = ["Professor Plum", "Miss Scarlet", "Colonel Mustard", "Mrs. White", "Mr. Green", "Mrs. Peacock"];
+//     return new Player(pos.id, pos.x, pos.y, characterNames[index]);
+// });
+
 let gameState = {
     board: gameBoard.board, // Initialize a 10x10 board
     players: {}, // Stores current positions
@@ -341,20 +381,32 @@ let gameState = {
 
 // WebSocket connection setup
 wss.on('connection', function connection(ws) {
+    if (players.length >= characterNames.length) {
+        console.log("Maximum player limit reached. Rejecting new connection.");
+        ws.close();
+        return;
+    }
 
 
-
-    const playerId = players.length + 1;
+    const playerId = players.length + 1; // Dynamic ID based on current player count
     console.log(`A new player has connected with ID: ${playerId}.`);
 
+    const characterIndex = players.length; // Index from the character names array
+    const initialPosition = initialPlayerPositions[characterIndex]; 
+    const character = characterNames[characterIndex]; // Assign character based on connection order
+
+
+
     // Find the initial position for the new player
-    const initialPosition = initialPlayerPositions.find(pos => pos.id === playerId);
+    // const initialPosition = initialPlayerPositions.find(pos => pos.id === playerId);
 
     // Create a new player instance with the initial position
-    const player = new Player(playerId, initialPosition?.x || 0, initialPosition?.y || 0);
+    const player = new Player(playerId, initialPosition?.x || 0, initialPosition?.y || 0, character);
+    
     player.ws = ws; // Assign the WebSocket connection to the player
     players.push(player); // Add the player to the players array
-
+    
+    console.log(`A new player has connected with ID: ${playerId}, character: ${character}.`);
     // Send player info to the newly connected player
     player.send({
         type: 'playerInfo',
