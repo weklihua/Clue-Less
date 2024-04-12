@@ -22,6 +22,7 @@ class Player {
         this.position = { x, y };
         this.cardsInHand = [];
         this.ws = null; // WebSocket connection
+        this.hasMoved = false; // Add this line to track if the player has moved this turn
     }
 
     addCard(card) {
@@ -298,8 +299,26 @@ function checkStartGame() {
 
 
 
+// function endTurn() {
+//     currentTurn = (currentTurn % players.length) + 1; // Cycle to the next player
+//     gameState.currentTurn = currentTurn;
+//     // broadcastGameState(); // Send the updated state to all clients
+//     console.log(`Turn has ended. It's now Player ${currentTurn}'s turn.`);
+// }
 
 
+function endTurn(playerId) {
+    const player = players.find(p => p.id === playerId);
+    if (player && player.hasMoved) {
+        player.hasMoved = false; // Reset move flag for this player
+        currentTurn = (currentTurn % players.length) + 1; // Move to the next player
+        gameState.currentTurn = currentTurn;
+        console.log(`Turn has ended. Now it's Player ${currentTurn}'s turn.`);
+        broadcastGameState(); // Update all clients with the new turn info
+    } else {
+        console.log(`Player ${playerId} cannot end the turn without moving.`);
+    }
+}
 
 
 
@@ -376,6 +395,10 @@ wss.on('connection', function connection(ws) {
 
         if (data.type === 'move' && data.playerId === currentTurn) {
 
+            const player = players.find(p => p.id === data.playerId);
+            if (!player.hasMoved) {
+
+
             if (data.direction === "down")      {i=0,j=1 } 
             if (data.direction === "up")        {i=0,j=-1}
             if (data.direction === "left")      {i=-1,j=0} 
@@ -403,11 +426,24 @@ wss.on('connection', function connection(ws) {
 
             broadcastChat(moveInfo, data.playerId); // Use this to broadcast move
            
+            // currentTurn = (currentTurn % players.length) + 1; // Move to the next player
+            // gameState.currentTurn = currentTurn;
+            broadcastGameState(); // Broadcast updated game stat
+            
 
-            currentTurn = (currentTurn % players.length) + 1; // Move to the next player
-            gameState.currentTurn = currentTurn;
-            broadcastGameState(); // Broadcast updated game state
+            player.hasMoved = true;
+        } else {
+            console.log(`Player ${data.playerId} has already moved this turn.`);
+            player.send({type: 'error', message: 'You have already moved this turn.'});
         }
+
+        }
+
+        if (data.type === 'endTurn' && data.playerId === currentTurn) {
+            endTurn(data.playerId);
+        }
+
+
 
         if (data.type === 'chat') {
             broadcastChat(data.message, data.playerId);

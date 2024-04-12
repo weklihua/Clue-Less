@@ -41,7 +41,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-
+    document.getElementById('endTurnButton').addEventListener('click', function() {
+        if (!this.disabled) {
+            ws.send(JSON.stringify({
+                type: 'endTurn',
+                playerId: myPlayerId
+            }));
+        }
+    });
 
     ws.onmessage = (event) => {
         const data = JSON.parse(event.data);
@@ -97,6 +104,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.getElementById('moveDown').disabled = false;
                     document.getElementById('moveLeft').disabled = false;
                     document.getElementById('moveRight').disabled = false;
+                    document.getElementById('endTurnButton').disabled = false;
+                    
 
                     // document.getElementById('secretPath').disabled = false;
 
@@ -111,6 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.getElementById('moveDown').disabled = true;
                     document.getElementById('moveLeft').disabled = true;
                     document.getElementById('moveRight').disabled = true;
+                    document.getElementById('endTurnButton').disabled = true;
 
                     // document.getElementById('secretPath').disabled = true;
 
