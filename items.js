@@ -103,7 +103,7 @@ let conservatory = {
 }
 
 let ballroom = {
-   name: "Ball room",
+   name: "Ballroom",
    image: null,
 }
 

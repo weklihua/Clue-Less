@@ -157,7 +157,7 @@ class GameBoard {
         if (x === 2 && y === 1) return 'Hallway';
         if (x === 2 && y === 2) return 'Billiard Room';
         if (x === 2 && y === 3) return 'Hallway';
-        if (x === 2 && y === 4) return 'Ball Room'; 
+        if (x === 2 && y === 4) return 'BallRoom'; 
     
         if (x === 3 && y === 0) return 'Hallway';
         if (x === 3 && y === 1) return 'Blocked'; //
@@ -259,64 +259,48 @@ function broadcastChat(message, playerId) {
 
 
 
-
-
-
-
 function handleAccusation(playerId, suspect, weapon, room) {
     const accuser = players.find(p => p.id === playerId);
     const accused = getPlayerByCharacter(suspect);
-    console.log(`accused ${accused}`);
-
-    console.log(`Player ${playerId} accuses ${suspect} with the ${weapon} in the ${room}.`);
+    
+    console.log(`Player ${playerId} (${accuser.character}) accuses: ${suspect} with the ${weapon} in the ${room}.`);
     console.log(`Winning cards are ${winningCards.suspect.name}, ${winningCards.weapon.name}, ${winningCards.room.name}.`);
 
-    if (!accused) {
-        console.log(`No player found representing the character ${suspect}.`);
-        return;
-    }
 
-    console.log(`Player ${playerId} accuses ${suspect} with the ${weapon} in the ${room}.`);
-    console.log(`Winning cards are ${winningCards.suspect.name}, ${winningCards.weapon.name}, ${winningCards.room.name}.`);
+    if (accused) {
+        const roomCoords = gameBoard.getRoomCoordinates(room);
+        if (roomCoords) {
+            accused.position = roomCoords;
+            clearPlayerPreviousMove(accused.id);
 
-    // Move accused player to the specified room
-    const roomCoords = gameBoard.getRoomCoordinates(room);
-    if (roomCoords) {
-        accused.position = roomCoords;
-        clearPlayerPreviousMove(accused.id);
-        gameState.board[roomCoords.y][roomCoords.x] = accused.id;
-        console.log(`Moved ${suspect} to ${room} at coordinates ${roomCoords.x}, ${roomCoords.y}.`);
-    }
+            // Update the accused player's position in the game state
+            gameState.players[accused.id] ={x: roomCoords.x ,y: roomCoords.y} 
+            gameState.board[roomCoords.y][roomCoords.x] = accused.id;
+
+            console.log(`Moved ${suspect} to ${room} at coordinates ${roomCoords.x}, ${roomCoords.y}.`);
+            let moveByMsg =`Player ${playerId} Moved ${suspect} to ${room}.`
+            broadcastChat(moveByMsg,playerId)
 
 
-
-    // if (suspect === winningCards.suspect.name && weapon === winningCards.weapon.name && room === winningCards.room.name) {
-    //     let winMessage = `Winner is Player ${playerId}, accusing ${suspect} with the ${weapon} in the ${room}.`;
-    //     console.log(winMessage);
-    //     broadcastChat(winMessage, playerId);
-    //     // End the game logic here if needed
-    // } else {
-    //     let lostMessage = `Player ${playerId}'s accusation is incorrect. The game continues.`;
-    //     broadcastChat(lostMessage, playerId);
-    // }
-
-
-        // Check if the accusation matches the winning cards
-        if (suspect === winningCards.suspect.name &&
-            weapon === winningCards.weapon.name &&
-            room === winningCards.room.name) {
-            // If the accusation is correct, broadcast the winner and end the game
-            let winmessage =`Winner is  ${playerId} , ${suspect} with the ${weapon} in the ${room}.`
-            console.log(`winner is ${playerId} `);
-            broadcastChat(winmessage,playerId);
-            // endGame();
-        } else {
-            // If the accusation is wrong, notify the player (or you might have specific rules for wrong accusations)
-    
-            let lostmessage = `Player ${playerId}'s accusation is incorrect. The game continues.`
-            broadcastChat(lostmessage,playerId)
-    
         }
+    }
+
+    // Check if the accusation matches the winning cards
+    if (suspect === winningCards.suspect.name &&
+        weapon === winningCards.weapon.name &&
+        room === winningCards.room.name) {
+        // If the accusation is correct, broadcast the winner and end the game
+        let winmessage =`Winner is  ${playerId} , ${suspect} with the ${weapon} in the ${room}.`
+        console.log(`winner is ${playerId} `);
+        broadcastChat(winmessage,playerId);
+        // endGame();
+    } else {
+        // If the accusation is wrong, notify the player (or you might have specific rules for wrong accusations)
+        console.log(`Incorrect accusation by Player ${playerId}. The game continues.`);
+        let lostmessage = `Player ${playerId} (${accuser.character})'s accusation of ${suspect} with the ${weapon} in the ${room} is incorrect. The game continues.`;
+        broadcastChat(lostmessage,playerId)
+
+    }
 
         
     broadcastGameState(); 
