@@ -254,8 +254,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('moveUpRight').addEventListener('click', () => {
         if (!document.getElementById('moveUpRight').disabled) {
-            const newX = currentPlayerX - 4;
-            const newY = currentPlayerY + 4;
+            const newX = currentPlayerX + 4;
+            const newY = currentPlayerY - 4;
             if (newX >= 0 && newX <= 4 && newY >= 0 && newY <= 4 ) { // Notice the NOT operator here to ensure logic correctness
                 ws.send(JSON.stringify({ type: 'move', direction: 'upRight', playerId: myPlayerId }));
                 // Here, you might also want to update currentPlayerX and currentPlayerY to reflect the new position
@@ -280,8 +280,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('moveDownLeft').addEventListener('click', () => {
         if (!document.getElementById('moveDownLeft').disabled) {
-            const newX = currentPlayerX + 4;
-            const newY = currentPlayerY - 4;
+            const newX = currentPlayerX - 4;
+            const newY = currentPlayerY + 4;
             if (newX >= 0 && newX <= 4 && newY >= 0 && newY <= 4 ) { // Notice the NOT operator here to ensure logic correctness
                 ws.send(JSON.stringify({ type: 'move', direction: 'downLeft', playerId: myPlayerId }));
                 // Here, you might also want to update currentPlayerX and currentPlayerY to reflect the new position

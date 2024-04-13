@@ -371,7 +371,10 @@ function endTurn(playerId) {
         console.log(`Turn has ended. Now it's Player ${currentTurn}'s turn.`);
         broadcastGameState(); // Update all clients with the new turn info
     } else {
-        console.log(`Player ${playerId} cannot end the turn without moving.`);
+        currentTurn = (currentTurn % players.length) + 1; // Move to the next player
+        gameState.currentTurn = currentTurn;
+        console.log(`Player ${playerId} end the turn without moving.`);
+        broadcastGameState(); 
     }
 }
 
@@ -478,9 +481,9 @@ wss.on('connection', function connection(ws) {
             if (data.direction === "right")     {i=1,j=0}
 
             if (data.direction === "downRight")   {i=4,j=4}
-            if (data.direction === "upRight")     {i=-4,j=4}
+            if (data.direction === "upRight")     {i=4,j=-4}
             if (data.direction === "upLeft")      {i=-4,j=-4}
-            if (data.direction === "downLeft")    {i=4,j=-4}
+            if (data.direction === "downLeft")    {i=-4,j=4}
 
             const nextMove = getNextMove(data.playerId,i,j);
 
