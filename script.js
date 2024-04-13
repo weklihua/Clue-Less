@@ -27,6 +27,15 @@ document.addEventListener('DOMContentLoaded', () => {
         weaponsDropdown.appendChild(option);
     });
 
+    const roomsDropdown = document.getElementById('roomsDropdown');
+    roomsArray.forEach(room => {
+        const option = document.createElement('option');
+        option.value = room.name;
+        option.textContent = room.name;
+        roomsDropdown.appendChild(option);
+    });
+    
+
     function displayCards(cards, containerId) {
         const container = document.getElementById(containerId);
         container.innerHTML = ''; // Clear previous cards
@@ -141,7 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.getElementById('accuseButton').disabled = false; // Enable suggest button
                 } else {
                     document.getElementById('suggestButton').disabled = true; // Disable suggest button
-                    document.getElementById('accuseButton').disabled = true; // Disable suggest button
+                    document.getElementById('accuseButton').disabled = false; // Disable suggest button
                 }
                 
 
@@ -254,8 +263,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('moveUpRight').addEventListener('click', () => {
         if (!document.getElementById('moveUpRight').disabled) {
-            const newX = currentPlayerX - 4;
-            const newY = currentPlayerY + 4;
+            const newX = currentPlayerX + 4;
+            const newY = currentPlayerY - 4;
             if (newX >= 0 && newX <= 4 && newY >= 0 && newY <= 4 ) { // Notice the NOT operator here to ensure logic correctness
                 ws.send(JSON.stringify({ type: 'move', direction: 'upRight', playerId: myPlayerId }));
                 // Here, you might also want to update currentPlayerX and currentPlayerY to reflect the new position
@@ -280,8 +289,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('moveDownLeft').addEventListener('click', () => {
         if (!document.getElementById('moveDownLeft').disabled) {
-            const newX = currentPlayerX + 4;
-            const newY = currentPlayerY - 4;
+            const newX = currentPlayerX - 4;
+            const newY = currentPlayerY + 4;
             if (newX >= 0 && newX <= 4 && newY >= 0 && newY <= 4 ) { // Notice the NOT operator here to ensure logic correctness
                 ws.send(JSON.stringify({ type: 'move', direction: 'downLeft', playerId: myPlayerId }));
                 // Here, you might also want to update currentPlayerX and currentPlayerY to reflect the new position
@@ -379,7 +388,7 @@ function isCellRoom(x, y) {
         { x: 0, y: 4 }, // Conservatory
         { x: 2, y: 0 }, // Hall
         { x: 2, y: 2 }, // Billiard Room
-        { x: 2, y: 4 }, // BallRoom
+        { x: 2, y: 4 }, // Ballroom
         { x: 4, y: 0 }, // Lounge
         { x: 4, y: 2 }, // Dining Room
         { x: 4, y: 4 } // Kitchen
@@ -412,7 +421,7 @@ function getRoomName_Client(x, y) {
     if (x === 2 && y === 1) return 'Hallway';
     if (x === 2 && y === 2) return 'Billiard Room';
     if (x === 2 && y === 3) return 'Hallway';
-    if (x === 2 && y === 4) return 'BallRoom'; 
+    if (x === 2 && y === 4) return 'Ballroom'; 
 
     if (x === 3 && y === 0) return 'Hallway';
     // if (x === 3 && y === 1) return 'Blocked';
@@ -475,11 +484,14 @@ document.getElementById('accuseButton').addEventListener('click', () => {
     //if (!document.getElementById('moveButton').disabled) {
         const suspect = document.getElementById('suspectsDropdown').value;
         const weapon = document.getElementById('weaponsDropdown').value;
+        const room = document.getElementById('roomsDropdown').value;
+        
 
         ws.send(JSON.stringify({ 
             type: 'accusation', 
             suspect, 
             weapon, 
+            room,
             //moveInfo: moveInfo, 
             playerId: myPlayerId 
         }));

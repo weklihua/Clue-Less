@@ -157,7 +157,7 @@ class GameBoard {
         if (x === 2 && y === 1) return 'Hallway';
         if (x === 2 && y === 2) return 'Billiard Room';
         if (x === 2 && y === 3) return 'Hallway';
-        if (x === 2 && y === 4) return 'Ball Room'; 
+        if (x === 2 && y === 4) return 'Ballroom'; 
     
         if (x === 3 && y === 0) return 'Hallway';
         if (x === 3 && y === 1) return 'Blocked'; //
@@ -240,8 +240,10 @@ function broadcastGameState() {
 
 
 function broadcastChat(message, playerId) {
-    const chatMessage = JSON.stringify({ type: 'chat', message, sender: `Player ${playerId}` });
-    console.log(`Broadcasting message from Player ${playerId}: ${message}`); // Log the message being sent
+    const sender = players.find(player => player.id === playerId);
+
+    const chatMessage = JSON.stringify({ type: 'chat', message, sender: `Player ${playerId} (${sender.character})` });
+    console.log(`Broadcasting message from Player ${playerId} (${sender.character}): ${message}`); // Log the message being sent
     players.forEach(player => {
         if (player.ws && player.ws.readyState === WebSocket.OPEN) {
             player.ws.send(chatMessage);
@@ -252,71 +254,124 @@ function broadcastChat(message, playerId) {
     });
 }
 
+function resetGameState() {
+
+
+    // Clear game board
+    gameState.board.forEach(row => row.fill(0));
+    gameState.lastPositions = {};
+
+    // Reset player positions and clear hands
+    players.forEach((player, index) => {
+        const initialPos = initialPlayerPositions[index];
+        player.position.x = initialPos.x;
+        player.position.y = initialPos.y;
+        player.cardsInHand = [];
+        player.hasMoved = false; // Reset move flag
+
+        // Optionally send each player their new (empty) card hand and position
+        // player.send({
+        //     type: 'reset',
+        //     position: player.position,
+        //     cards: []
+        // });
+    });
 
 
 
+    // Reset other game state variables
+    currentTurn = 1; // Or whoever should start the new game
+    gameState.currentTurn = currentTurn;
+    gameSettings.isGameStarted = false;
 
 
+    // Log reset completion
+    console.log("Game state has been reset. Ready for a new game.");
+
+    // Broadcast updated game state to all players
+    broadcastGameState();
+}
 
 
+function endGame(winnerId) {
+    broadcastChat(`Game Over! Player ${winnerId} wins. Resetting game...`, winnerId);
+    // Reset game state, clear boards, prepare for new game session
+    resetGameState();
+    checkStartGame();
+    broadcastGameState(); // Notify all players of the reset state
+}
 
+
+function handleSuggestion(playerId, suspect, weapon, room) {
+    const accuser = players.find(p => p.id === playerId);
+    const accused = getPlayerByCharacter(suspect);
+    
+    console.log(`Player ${playerId} (${accuser.character}) accuses: ${suspect} with the ${weapon} in the ${room}.`);
+    console.log(`Winning cards are ${winningCards.suspect.name}, ${winningCards.weapon.name}, ${winningCards.room.name}.`);
+
+
+    if (accused) {
+        const roomCoords = gameBoard.getRoomCoordinates(room);
+        if (roomCoords) {
+            accused.position = roomCoords;
+            clearPlayerPreviousMove(accused.id);
+
+            // Update the accused player's position in the game state
+            gameState.players[accused.id] ={x: roomCoords.x ,y: roomCoords.y} 
+            gameState.board[roomCoords.y][roomCoords.x] = accused.id;
+
+            console.log(`Moved ${suspect} to ${room} at coordinates ${roomCoords.x}, ${roomCoords.y}.`);
+            let moveByMsg =`Player ${playerId} Moved ${suspect} to ${room}.`
+            broadcastChat(moveByMsg,playerId)
+
+
+        }
+    }
+    broadcastGameState(); 
+}
 
 function handleAccusation(playerId, suspect, weapon, room) {
     const accuser = players.find(p => p.id === playerId);
     const accused = getPlayerByCharacter(suspect);
-    console.log(`accused ${accused}`);
-
-    console.log(`Player ${playerId} accuses ${suspect} with the ${weapon} in the ${room}.`);
+    
+    console.log(`Player ${playerId} (${accuser.character}) accuses: ${suspect} with the ${weapon} in the ${room}.`);
     console.log(`Winning cards are ${winningCards.suspect.name}, ${winningCards.weapon.name}, ${winningCards.room.name}.`);
 
-    if (!accused) {
-        console.log(`No player found representing the character ${suspect}.`);
-        return;
-    }
 
-    console.log(`Player ${playerId} accuses ${suspect} with the ${weapon} in the ${room}.`);
-    console.log(`Winning cards are ${winningCards.suspect.name}, ${winningCards.weapon.name}, ${winningCards.room.name}.`);
+    // if (accused) {
+    //     const roomCoords = gameBoard.getRoomCoordinates(room);
+    //     if (roomCoords) {
+    //         accused.position = roomCoords;
+    //         clearPlayerPreviousMove(accused.id);
 
-    // Move accused player to the specified room
-    const roomCoords = gameBoard.getRoomCoordinates(room);
-    if (roomCoords) {
-        accused.position = roomCoords;
-        clearPlayerPreviousMove(accused.id);
-        gameState.board[roomCoords.y][roomCoords.x] = accused.id;
-        console.log(`Moved ${suspect} to ${room} at coordinates ${roomCoords.x}, ${roomCoords.y}.`);
-    }
+    //         // Update the accused player's position in the game state
+    //         gameState.players[accused.id] ={x: roomCoords.x ,y: roomCoords.y} 
+    //         gameState.board[roomCoords.y][roomCoords.x] = accused.id;
 
-
-
-    // if (suspect === winningCards.suspect.name && weapon === winningCards.weapon.name && room === winningCards.room.name) {
-    //     let winMessage = `Winner is Player ${playerId}, accusing ${suspect} with the ${weapon} in the ${room}.`;
-    //     console.log(winMessage);
-    //     broadcastChat(winMessage, playerId);
-    //     // End the game logic here if needed
-    // } else {
-    //     let lostMessage = `Player ${playerId}'s accusation is incorrect. The game continues.`;
-    //     broadcastChat(lostMessage, playerId);
+    //         console.log(`Moved ${suspect} to ${room} at coordinates ${roomCoords.x}, ${roomCoords.y}.`);
+    //         let moveByMsg =`Player ${playerId} Moved ${suspect} to ${room}.`
+    //         broadcastChat(moveByMsg,playerId)
+    //     }
     // }
 
+    // Check if the accusation matches the winning cards
+    if (suspect === winningCards.suspect.name &&
+        weapon === winningCards.weapon.name &&
+        room === winningCards.room.name) {
+        // If the accusation is correct, broadcast the winner and end the game
+        let winmessage =`Winner is  ${playerId} , ${suspect} with the ${weapon} in the ${room}.`
+        console.log(`winner is ${playerId} `);
+        broadcastChat(winmessage,playerId);
+        // broadcastGameState(); 
+        endGame(playerId);
+    } else {
+        // If the accusation is wrong, notify the player (or you might have specific rules for wrong accusations)
+        console.log(`Incorrect accusation by Player ${playerId}. The game continues.`);
+        let lostmessage = `Player ${playerId} (${accuser.character})'s accusation of ${suspect} with the ${weapon} in the ${room} is incorrect. The game continues.`;
+        broadcastChat(lostmessage,playerId)
 
-        // Check if the accusation matches the winning cards
-        if (suspect === winningCards.suspect.name &&
-            weapon === winningCards.weapon.name &&
-            room === winningCards.room.name) {
-            // If the accusation is correct, broadcast the winner and end the game
-            let winmessage =`Winner is  ${playerId} , ${suspect} with the ${weapon} in the ${room}.`
-            console.log(`winner is ${playerId} `);
-            broadcastChat(winmessage,playerId);
-            // endGame();
-        } else {
-            // If the accusation is wrong, notify the player (or you might have specific rules for wrong accusations)
-    
-            let lostmessage = `Player ${playerId}'s accusation is incorrect. The game continues.`
-            broadcastChat(lostmessage,playerId)
-    
-        }
+    }
 
-        
     broadcastGameState(); 
 }
 
@@ -332,9 +387,6 @@ function startGame() {
             gameState.board[pos.y][pos.x] = pos.id;
         }
     });
-
-
-
 
     broadcastGameState();
     console.log('Game has started');
@@ -371,7 +423,10 @@ function endTurn(playerId) {
         console.log(`Turn has ended. Now it's Player ${currentTurn}'s turn.`);
         broadcastGameState(); // Update all clients with the new turn info
     } else {
-        console.log(`Player ${playerId} cannot end the turn without moving.`);
+        currentTurn = (currentTurn % players.length) + 1; // Move to the next player
+        gameState.currentTurn = currentTurn;
+        console.log(`Player ${playerId} end the turn without moving.`);
+        broadcastGameState(); 
     }
 }
 
@@ -436,9 +491,6 @@ wss.on('connection', function connection(ws) {
     });
 
 
-
-
-
     // Send the initial game state to the player
     ws.send(JSON.stringify({
         type: 'init',
@@ -478,9 +530,9 @@ wss.on('connection', function connection(ws) {
             if (data.direction === "right")     {i=1,j=0}
 
             if (data.direction === "downRight")   {i=4,j=4}
-            if (data.direction === "upRight")     {i=-4,j=4}
+            if (data.direction === "upRight")     {i=4,j=-4}
             if (data.direction === "upLeft")      {i=-4,j=-4}
-            if (data.direction === "downLeft")    {i=4,j=-4}
+            if (data.direction === "downLeft")    {i=-4,j=4}
 
             const nextMove = getNextMove(data.playerId,i,j);
 
@@ -531,15 +583,16 @@ wss.on('connection', function connection(ws) {
             broadcastChat(suggestionInfo, data.playerId); // Broadcast suggestion
 
             console.log('player',playerId,'suspect:', data.suspect,'weapon:',data.weapon ,'room:',roomName );
+            handleSuggestion(data.playerId, data.suspect, data.weapon, roomName)
         }
 
         if (data.type === 'accusation') {
-            const roomName = gameBoard.getRoomName(gameState.lastPositions[data.playerId].x, gameState.lastPositions[data.playerId].y); // Ensure this function exists and returns the correct room name
-            const accusationInfo = `Player ${data.playerId} accuses: ${data.suspect} with the ${data.weapon} at ${roomName}.`;
+            // const roomName = gameBoard.getRoomName(gameState.lastPositions[data.playerId].x, gameState.lastPositions[data.playerId].y); // Ensure this function exists and returns the correct room name
+            const accusationInfo = `Player ${data.playerId} accuses: ${data.suspect} with the ${data.weapon} at ${data.room}.`;
             broadcastChat(accusationInfo, data.playerId); // Broadcast accusation
 
-            console.log('player',playerId,'suspect:', data.suspect,'weapon:',data.weapon ,'room:',roomName );
-            handleAccusation(data.playerId, data.suspect, data.weapon, roomName)
+            console.log('player',playerId,'suspect:', data.suspect,'weapon:',data.weapon ,'room:',data.room );
+            handleAccusation(data.playerId, data.suspect, data.weapon, data.room)
         }
         
 
