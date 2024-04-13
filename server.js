@@ -240,8 +240,10 @@ function broadcastGameState() {
 
 
 function broadcastChat(message, playerId) {
-    const chatMessage = JSON.stringify({ type: 'chat', message, sender: `Player ${playerId}` });
-    console.log(`Broadcasting message from Player ${playerId}: ${message}`); // Log the message being sent
+    const sender = players.find(player => player.id === playerId);
+
+    const chatMessage = JSON.stringify({ type: 'chat', message, sender: `Player ${playerId} (${sender.character})` });
+    console.log(`Broadcasting message from Player ${playerId} (${sender.character}): ${message}`); // Log the message being sent
     players.forEach(player => {
         if (player.ws && player.ws.readyState === WebSocket.OPEN) {
             player.ws.send(chatMessage);
