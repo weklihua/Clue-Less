@@ -587,12 +587,12 @@ wss.on('connection', function connection(ws) {
         }
 
         if (data.type === 'accusation') {
-            const roomName = gameBoard.getRoomName(gameState.lastPositions[data.playerId].x, gameState.lastPositions[data.playerId].y); // Ensure this function exists and returns the correct room name
-            const accusationInfo = `Player ${data.playerId} accuses: ${data.suspect} with the ${data.weapon} at ${roomName}.`;
+            // const roomName = gameBoard.getRoomName(gameState.lastPositions[data.playerId].x, gameState.lastPositions[data.playerId].y); // Ensure this function exists and returns the correct room name
+            const accusationInfo = `Player ${data.playerId} accuses: ${data.suspect} with the ${data.weapon} at ${data.room}.`;
             broadcastChat(accusationInfo, data.playerId); // Broadcast accusation
 
-            console.log('player',playerId,'suspect:', data.suspect,'weapon:',data.weapon ,'room:',roomName );
-            handleAccusation(data.playerId, data.suspect, data.weapon, roomName)
+            console.log('player',playerId,'suspect:', data.suspect,'weapon:',data.weapon ,'room:',data.room );
+            handleAccusation(data.playerId, data.suspect, data.weapon, data.room)
         }
         
 

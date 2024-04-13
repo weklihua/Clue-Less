@@ -27,6 +27,15 @@ document.addEventListener('DOMContentLoaded', () => {
         weaponsDropdown.appendChild(option);
     });
 
+    const roomsDropdown = document.getElementById('roomsDropdown');
+    roomsArray.forEach(room => {
+        const option = document.createElement('option');
+        option.value = room.name;
+        option.textContent = room.name;
+        roomsDropdown.appendChild(option);
+    });
+    
+
     function displayCards(cards, containerId) {
         const container = document.getElementById(containerId);
         container.innerHTML = ''; // Clear previous cards
@@ -141,7 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.getElementById('accuseButton').disabled = false; // Enable suggest button
                 } else {
                     document.getElementById('suggestButton').disabled = true; // Disable suggest button
-                    document.getElementById('accuseButton').disabled = true; // Disable suggest button
+                    document.getElementById('accuseButton').disabled = false; // Disable suggest button
                 }
                 
 
@@ -475,11 +484,14 @@ document.getElementById('accuseButton').addEventListener('click', () => {
     //if (!document.getElementById('moveButton').disabled) {
         const suspect = document.getElementById('suspectsDropdown').value;
         const weapon = document.getElementById('weaponsDropdown').value;
+        const room = document.getElementById('roomsDropdown').value;
+        
 
         ws.send(JSON.stringify({ 
             type: 'accusation', 
             suspect, 
             weapon, 
+            room,
             //moveInfo: moveInfo, 
             playerId: myPlayerId 
         }));
