@@ -11,30 +11,47 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
 
+    // const suspectsDropdown = document.getElementById('suspectsDropdown');
+    // suspectsArray.forEach(suspect => {
+    //     const option = document.createElement('option');
+    //     option.value = suspect.name;
+    //     option.textContent = suspect.name;
+    //     suspectsDropdown.appendChild(option);
+    // });
+
+    // const weaponsDropdown = document.getElementById('weaponsDropdown');
+    // weaponsArray.forEach(weapon => {
+    //     const option = document.createElement('option');
+    //     option.value = weapon.name;
+    //     option.textContent = weapon.name;
+    //     weaponsDropdown.appendChild(option);
+    // });
+
+    // const roomsDropdown = document.getElementById('roomsDropdown');
+    // roomsArray.forEach(room => {
+    //     const option = document.createElement('option');
+    //     option.value = room.name;
+    //     option.textContent = room.name;
+    //     roomsDropdown.appendChild(option);
+    // });
+    // Populate dropdowns for suspects, weapons, and rooms
     const suspectsDropdown = document.getElementById('suspectsDropdown');
-    suspectsArray.forEach(suspect => {
-        const option = document.createElement('option');
-        option.value = suspect.name;
-        option.textContent = suspect.name;
-        suspectsDropdown.appendChild(option);
-    });
-
     const weaponsDropdown = document.getElementById('weaponsDropdown');
-    weaponsArray.forEach(weapon => {
-        const option = document.createElement('option');
-        option.value = weapon.name;
-        option.textContent = weapon.name;
-        weaponsDropdown.appendChild(option);
-    });
-
     const roomsDropdown = document.getElementById('roomsDropdown');
-    roomsArray.forEach(room => {
-        const option = document.createElement('option');
-        option.value = room.name;
-        option.textContent = room.name;
-        roomsDropdown.appendChild(option);
+    const dropdowns = [
+        { dropdown: suspectsDropdown, array: suspectsArray },
+        { dropdown: weaponsDropdown, array: weaponsArray },
+        { dropdown: roomsDropdown, array: roomsArray }
+    ];
+
+    dropdowns.forEach(({ dropdown, array }) => {
+        array.forEach(item => {
+            const option = document.createElement('option');
+            option.value = item.name;
+            option.textContent = item.name;
+            dropdown.appendChild(option);
+        });
     });
-    
 
     function displayCards(cards, containerId) {
         const container = document.getElementById(containerId);
@@ -93,6 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 break;
             case 'update':
+                gameBoardData = data.board;
                 updateBoard(data.board);
 
                 if (data.lastPositions) {
@@ -197,6 +215,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!document.getElementById('moveUp').disabled) {
             const newX = currentPlayerX;
             const newY = currentPlayerY - 1;
+
+            // Perform a quick client-side check to see if the move is to a hallway and if it is occupied
+            if (isHallway(newX, newY) && isOccupied(newX, newY)) {
+                alert('This hallway is already occupied!');
+                return; // Stop the event handler here
+            }
+
             if (!isCellBlocked(newX, newY) && newY >= 0) { // Notice the NOT operator here to ensure logic correctness
                 ws.send(JSON.stringify({ type: 'move', direction: 'up', playerId: myPlayerId }));
                 // Here, you might also want to update currentPlayerX and currentPlayerY to reflect the new position
@@ -212,6 +237,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!document.getElementById('moveDown').disabled) {
             const newX = currentPlayerX;
             const newY = currentPlayerY + 1; // Moving down increases the Y coordinate
+
+
+            // Perform a quick client-side check to see if the move is to a hallway and if it is occupied
+            if (isHallway(newX, newY) && isOccupied(newX, newY)) {
+                alert('This hallway is already occupied!');
+                return; // Stop the event handler here
+            }
+
             if (!isCellBlocked(newX, newY) && newY <= 4) {
                 ws.send(JSON.stringify({ type: 'move', direction: 'down', playerId: myPlayerId }));
                 // Update currentPlayerY after the server confirms the move
@@ -225,6 +258,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!document.getElementById('moveLeft').disabled) {
             const newX = currentPlayerX - 1; // Moving left decreases the X coordinate
             const newY = currentPlayerY;
+
+
+            // Perform a quick client-side check to see if the move is to a hallway and if it is occupied
+            if (isHallway(newX, newY) && isOccupied(newX, newY)) {
+                alert('This hallway is already occupied!');
+                return; // Stop the event handler here
+            }
+
+            
             if (!isCellBlocked(newX, newY) && newX >= 0) {
                 ws.send(JSON.stringify({ type: 'move', direction: 'left', playerId: myPlayerId }));
                 // Update currentPlayerX after the server confirms the move
@@ -238,6 +280,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!document.getElementById('moveRight').disabled) {
             const newX = currentPlayerX + 1; // Moving right increases the X coordinate
             const newY = currentPlayerY;
+
+            // Perform a quick client-side check to see if the move is to a hallway and if it is occupied
+            if (isHallway(newX, newY) && isOccupied(newX, newY)) {
+                alert('This hallway is already occupied!');
+                return; // Stop the event handler here
+            }
+
             if (!isCellBlocked(newX, newY) && newX <= 4) {
                 ws.send(JSON.stringify({ type: 'move', direction: 'right', playerId: myPlayerId }));
                 // Update currentPlayerX after the server confirms the move
@@ -360,7 +409,20 @@ function isCellBlocked(x, y) {
     return blockedCells.some(cell => cell.x === x && cell.y === y);
 }
 
+// Helper function to determine if a cell is a hallway based on some logic you define
+function isHallway(x, y) {
+    return getRoomName_Client(x, y) === 'Hallway';
+}
 
+// Client-side check to simulate if a cell is occupied (this would need actual game state to be accurate)
+function isOccupied(x, y) {
+    // Make sure the indices are within the bounds of the array
+    if (y >= 0 && y < gameBoardData.length && x >= 0 && x < gameBoardData[0].length) {
+        console.log(`Checking occupancy at (${x}, ${y}):`, gameBoardData[y][x]); // Log the value being checked
+        return gameBoardData[y][x] > 0;
+    }
+    return false; // Return false if out of bounds
+}
 
 
 // Function to check if the current position have secret path
