@@ -254,8 +254,52 @@ function broadcastChat(message, playerId) {
     });
 }
 
+function resetGameState() {
 
 
+    // Clear game board
+    gameState.board.forEach(row => row.fill(0));
+    gameState.lastPositions = {};
+
+    // Reset player positions and clear hands
+    players.forEach((player, index) => {
+        const initialPos = initialPlayerPositions[index];
+        player.position.x = initialPos.x;
+        player.position.y = initialPos.y;
+        player.cardsInHand = [];
+        player.hasMoved = false; // Reset move flag
+
+        // Optionally send each player their new (empty) card hand and position
+        // player.send({
+        //     type: 'reset',
+        //     position: player.position,
+        //     cards: []
+        // });
+    });
+
+
+
+    // Reset other game state variables
+    currentTurn = 1; // Or whoever should start the new game
+    gameState.currentTurn = currentTurn;
+    gameSettings.isGameStarted = false;
+
+
+    // Log reset completion
+    console.log("Game state has been reset. Ready for a new game.");
+
+    // Broadcast updated game state to all players
+    broadcastGameState();
+}
+
+
+function endGame(winnerId) {
+    broadcastChat(`Game Over! Player ${winnerId} wins. Resetting game...`, winnerId);
+    // Reset game state, clear boards, prepare for new game session
+    resetGameState();
+    checkStartGame();
+    broadcastGameState(); // Notify all players of the reset state
+}
 
 
 
@@ -293,7 +337,8 @@ function handleAccusation(playerId, suspect, weapon, room) {
         let winmessage =`Winner is  ${playerId} , ${suspect} with the ${weapon} in the ${room}.`
         console.log(`winner is ${playerId} `);
         broadcastChat(winmessage,playerId);
-        // endGame();
+        // broadcastGameState(); 
+        endGame(playerId);
     } else {
         // If the accusation is wrong, notify the player (or you might have specific rules for wrong accusations)
         console.log(`Incorrect accusation by Player ${playerId}. The game continues.`);
@@ -318,9 +363,6 @@ function startGame() {
             gameState.board[pos.y][pos.x] = pos.id;
         }
     });
-
-
-
 
     broadcastGameState();
     console.log('Game has started');
@@ -423,9 +465,6 @@ wss.on('connection', function connection(ws) {
         playerId: playerId,
         isPlayerOne: playerId === 1
     });
-
-
-
 
 
     // Send the initial game state to the player
