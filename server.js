@@ -157,7 +157,7 @@ class GameBoard {
         if (x === 2 && y === 1) return 'Hallway';
         if (x === 2 && y === 2) return 'Billiard Room';
         if (x === 2 && y === 3) return 'Hallway';
-        if (x === 2 && y === 4) return 'BallRoom'; 
+        if (x === 2 && y === 4) return 'Ballroom'; 
     
         if (x === 3 && y === 0) return 'Hallway';
         if (x === 3 && y === 1) return 'Blocked'; //
@@ -302,8 +302,7 @@ function endGame(winnerId) {
 }
 
 
-
-function handleAccusation(playerId, suspect, weapon, room) {
+function handleSuggestion(playerId, suspect, weapon, room) {
     const accuser = players.find(p => p.id === playerId);
     const accused = getPlayerByCharacter(suspect);
     
@@ -328,6 +327,32 @@ function handleAccusation(playerId, suspect, weapon, room) {
 
         }
     }
+    broadcastGameState(); 
+}
+
+function handleAccusation(playerId, suspect, weapon, room) {
+    const accuser = players.find(p => p.id === playerId);
+    const accused = getPlayerByCharacter(suspect);
+    
+    console.log(`Player ${playerId} (${accuser.character}) accuses: ${suspect} with the ${weapon} in the ${room}.`);
+    console.log(`Winning cards are ${winningCards.suspect.name}, ${winningCards.weapon.name}, ${winningCards.room.name}.`);
+
+
+    // if (accused) {
+    //     const roomCoords = gameBoard.getRoomCoordinates(room);
+    //     if (roomCoords) {
+    //         accused.position = roomCoords;
+    //         clearPlayerPreviousMove(accused.id);
+
+    //         // Update the accused player's position in the game state
+    //         gameState.players[accused.id] ={x: roomCoords.x ,y: roomCoords.y} 
+    //         gameState.board[roomCoords.y][roomCoords.x] = accused.id;
+
+    //         console.log(`Moved ${suspect} to ${room} at coordinates ${roomCoords.x}, ${roomCoords.y}.`);
+    //         let moveByMsg =`Player ${playerId} Moved ${suspect} to ${room}.`
+    //         broadcastChat(moveByMsg,playerId)
+    //     }
+    // }
 
     // Check if the accusation matches the winning cards
     if (suspect === winningCards.suspect.name &&
@@ -347,7 +372,6 @@ function handleAccusation(playerId, suspect, weapon, room) {
 
     }
 
-        
     broadcastGameState(); 
 }
 
@@ -559,6 +583,7 @@ wss.on('connection', function connection(ws) {
             broadcastChat(suggestionInfo, data.playerId); // Broadcast suggestion
 
             console.log('player',playerId,'suspect:', data.suspect,'weapon:',data.weapon ,'room:',roomName );
+            handleSuggestion(data.playerId, data.suspect, data.weapon, roomName)
         }
 
         if (data.type === 'accusation') {

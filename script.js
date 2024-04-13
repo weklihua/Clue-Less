@@ -379,7 +379,7 @@ function isCellRoom(x, y) {
         { x: 0, y: 4 }, // Conservatory
         { x: 2, y: 0 }, // Hall
         { x: 2, y: 2 }, // Billiard Room
-        { x: 2, y: 4 }, // BallRoom
+        { x: 2, y: 4 }, // Ballroom
         { x: 4, y: 0 }, // Lounge
         { x: 4, y: 2 }, // Dining Room
         { x: 4, y: 4 } // Kitchen
@@ -412,7 +412,7 @@ function getRoomName_Client(x, y) {
     if (x === 2 && y === 1) return 'Hallway';
     if (x === 2 && y === 2) return 'Billiard Room';
     if (x === 2 && y === 3) return 'Hallway';
-    if (x === 2 && y === 4) return 'BallRoom'; 
+    if (x === 2 && y === 4) return 'Ballroom'; 
 
     if (x === 3 && y === 0) return 'Hallway';
     // if (x === 3 && y === 1) return 'Blocked';
