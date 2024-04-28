@@ -90,36 +90,36 @@ body {
     overflow: hidden; /* Hide any overflow content outside the circular shape */
 }
 
-.player1 { background-color: red; 
+.player1 { background-color:   purple;
 
     background-image: url('image/Pro.PNG');
 
 }
 
-.player2 { background-color: orange; 
+.player2 { background-color: red; 
 
     background-image: url('image/sar.PNG');
 
 }
 
-.player3 { background-color: yellow; 
+.player3 { background-color: orange; 
 
     background-image: url('image/mus.PNG');
 
 } 
 
-.player4 { background-color: green;
+.player4 { background-color:  lightpink; 
 
     background-image: url('image/whi.PNG');
 
 } 
 
-.player5 { background-color: pink;    
+.player5 { background-color:    green;
 
     background-image: url('image/gre.PNG');
 } 
 
-.player6 { background-color: purple;     
+.player6 { background-color:  lightblue ;
 
     background-image: url('image/pea.PNG');
 
