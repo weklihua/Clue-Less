@@ -254,6 +254,92 @@ function broadcastChat(message, playerId) {
     });
 }
 
+
+// function that broadcast to one person only
+function broadcastChatTo(message, playerReceive) {
+   
+    const chatMessage = JSON.stringify({ type: 'chat', message, sender: `System`});
+
+    players.forEach(player => {
+        if (player.id == playerReceive && player.ws && player.ws.readyState === WebSocket.OPEN) {
+            player.ws.send(chatMessage);
+            console.log(`Sent to Player ${player.id}`); // Log the recipient of the message
+        } else {
+            console.log(`Connection not open for Player ${player.id}`); // Log if the connection is not open
+        }
+    });
+    
+}
+
+
+
+// function to handle show card existence
+function handleShowCard(playerId, suspect, weapon, room) {
+
+    // Reset the sequence of player checking. For example, if player 2 make a suggestion, the checking start on player3
+    // Convert Set to an array
+    let arrayFromSet = Array.from(players);
+
+    // Reorganize the sequence of elements in the array
+    let rearrangedArray = arrayFromSet.slice(playerId).concat(arrayFromSet.slice(0, playerId));
+
+    // Convert the rearranged array back to a Set
+    let rearrangedSet = new Set(rearrangedArray);
+    
+    // Initiate variable
+    let findMessage = `initiate find message`;
+    let findTrigger = 0;
+    // Check for each player to see if the suggestion card exist in their hand
+    rearrangedSet.forEach(player => {
+        
+        // Set up trigger to end the loop, once a card has been found
+        if (findTrigger == 1) {
+            return true;
+        }
+
+        if (player.id == playerId){
+            console.log(`self, skip`);
+        } else {
+        // Convert object to string 
+        let jsonString = JSON.stringify(player.cardsInHand.map(card => card.name));
+
+        if (jsonString.indexOf(suspect) !== -1) {
+            console.log(`${suspect} exists in the card list of player ${player.id}.`);
+            findMessage = `${suspect} exists in the card list of player ${player.id}.`;
+            findTrigger = 1;
+            broadcastChatTo(findMessage, playerId);
+            broadcastChat(`Player ${player.id} has one of the suggestion card.`, player.id)
+            return true;
+        } else if (jsonString.indexOf(weapon) !== -1){
+            console.log(`${weapon} exists in the card list of player ${player.id}.`);
+            findMessage = `${weapon} exists in the card list of player ${player.id}.`;
+            findTrigger = 1;
+            broadcastChatTo(findMessage, playerId);
+            broadcastChat(`Player ${player.id} has one of the suggestion card.`, player.id)
+            return true;
+        } else if (jsonString.indexOf(room) !== -1){
+            console.log(`${room} exists in the card list of player ${player.id}.`);
+            findMessage = `${room} exists in the card list of player ${player.id}.`;
+            findTrigger = 1;
+            broadcastChatTo(findMessage, playerId);
+            broadcastChat(`Player ${player.id} has one of the suggestion card.`, player.id)
+            return true;
+        } else {
+            console.log(`No Card exists in the card list of player ${player.id}.`);
+            findMessage = `No Card exists in the card list of player ${player.id}.`;
+            broadcastChatTo(findMessage, playerId);
+            broadcastChat(`This player possesses none of the suggestion card.`, player.id)
+        }
+        }
+        
+       
+    });
+
+}
+
+
+
+
 function resetGameState() {
 
 
@@ -584,6 +670,7 @@ wss.on('connection', function connection(ws) {
 
             console.log('player',playerId,'suspect:', data.suspect,'weapon:',data.weapon ,'room:',roomName );
             handleSuggestion(data.playerId, data.suspect, data.weapon, roomName)
+            handleShowCard(data.playerId, data.suspect, data.weapon, roomName)
         }
 
         if (data.type === 'accusation') {
